@@ -4,22 +4,33 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useApp } from '@/context/AppContext';
 import { useCart } from '@/context/CartContext';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 
 const RestaurantDetail = () => {
   const { id } = useParams();
-  const { restaurants, menuItems } = useApp();
+  const { restaurants, fetchMenuItems } = useApp();
+  const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const restaurant = restaurants.find(r => r.id === id);
-  const items = menuItems.filter(m => m.restaurantId === id);
-  const categories = [...new Set(items.map(m => m.category))];
+  const categories = [...new Set(menuItems.map(m => m.category))];
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { addItem, items: cartItems, updateQuantity } = useCart();
 
   const filteredItems = useMemo(() =>
-    selectedCategory ? items.filter(i => i.category === selectedCategory) : items
-  , [selectedCategory, items]);
+    selectedCategory ? menuItems.filter(i => i.category === selectedCategory) : menuItems
+  , [selectedCategory, menuItems]);
+
+  useEffect(() => {
+    if (id) {
+      fetchMenuItems(id).then(items => {
+        setMenuItems(items);
+        setLoading(false);
+      });
+    }
+  }, [id, fetchMenuItems]);
 
   if (!restaurant) return <div className="container py-16 text-center text-muted-foreground">Restaurant not found</div>;
+  if (loading) return <div className="container py-16 text-center text-muted-foreground">Loading menu...</div>;
 
   const getCartQuantity = (itemId: string) => cartItems.find(c => c.menuItem.id === itemId)?.quantity || 0;
 

@@ -4,6 +4,7 @@ import { CreditCard, Smartphone, Banknote, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 
 const paymentMethods = [
@@ -14,23 +15,35 @@ const paymentMethods = [
 
 const Checkout = () => {
   const [payment, setPayment] = useState('upi');
+  const [address, setAddress] = useState('123 Example Street, City');
   const [processing, setProcessing] = useState(false);
   const { getTotal, placeOrder, items } = useCart();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const total = getTotal() + 2.99;
+
+  if (!isAuthenticated) {
+    navigate('/login');
+    return null;
+  }
 
   if (items.length === 0) {
     navigate('/cart');
     return null;
   }
 
-  const handlePlace = () => {
+  const handlePlace = async () => {
     setProcessing(true);
-    setTimeout(() => {
-      const order = placeOrder(payment);
-      toast.success('Order placed successfully!');
-      navigate(`/order/${order.id}`);
-    }, 1500);
+    try {
+      const order = await placeOrder(payment, address);
+      if (order) {
+        navigate(`/order/${order.id}`);
+      }
+    } catch (error) {
+      toast.error('Failed to place order');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
@@ -40,7 +53,11 @@ const Checkout = () => {
       {/* Delivery Address */}
       <div className="mb-6 rounded-xl border bg-card p-5">
         <h2 className="mb-3 text-sm font-semibold text-foreground">Delivery Address</h2>
-        <Input placeholder="Full address" defaultValue="123 Example Street, City" />
+        <Input 
+          placeholder="Full address" 
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+        />
       </div>
 
       {/* Payment */}

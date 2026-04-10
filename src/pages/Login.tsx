@@ -1,16 +1,45 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { UtensilsCrossed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 
 const Login = () => {
   const [isRegister, setIsRegister] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'customer'
+  });
+  const { login, register } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.info('Auth is UI-only for now. Backend coming soon!');
+    setLoading(true);
+
+    try {
+      if (isRegister) {
+        await register(formData.name, formData.email, formData.password, formData.role);
+        toast.success('Account created successfully!');
+      } else {
+        await login(formData.email, formData.password);
+        toast.success('Welcome back!');
+      }
+      navigate('/');
+    } catch (error: any) {
+      toast.error(error.message || 'Authentication failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   return (
@@ -23,17 +52,48 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {isRegister && <Input placeholder="Full Name" />}
-          <Input type="email" placeholder="Email" />
-          <Input type="password" placeholder="Password" />
           {isRegister && (
-            <select className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground">
+            <Input 
+              name="name"
+              placeholder="Full Name" 
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
+          )}
+          <Input 
+            name="email"
+            type="email" 
+            placeholder="Email" 
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+          <Input 
+            name="password"
+            type="password" 
+            placeholder="Password" 
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+          {isRegister && (
+            <select 
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground"
+            >
               <option value="customer">Customer</option>
               <option value="restaurant_owner">Restaurant Owner</option>
             </select>
           )}
-          <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-            {isRegister ? 'Sign Up' : 'Login'}
+          <Button 
+            type="submit" 
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+            disabled={loading}
+          >
+            {loading ? 'Please wait...' : (isRegister ? 'Sign Up' : 'Login')}
           </Button>
         </form>
 
@@ -44,9 +104,10 @@ const Login = () => {
           </button>
         </p>
 
-        <Link to="/" className="mt-4 block text-center text-xs text-muted-foreground hover:text-foreground">
-          ← Back to home
-        </Link>
+        <div className="mt-4 text-center text-xs text-muted-foreground">
+          <p>Test admin login:</p>
+          <p>admin@foodzen.com / admin123</p>
+        </div>
       </div>
     </div>
   );

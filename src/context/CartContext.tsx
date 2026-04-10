@@ -1,18 +1,22 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { CartItem, MenuItem, Order, OrderStatus } from '@/data/types';
+import { useAuth } from '@/context/AuthContext';
+import apiService from '@/services/api';
 import { toast } from 'sonner';
 
 interface CartContextType {
   items: CartItem[];
   orders: Order[];
+  loading: boolean;
   addItem: (item: MenuItem, restaurantId: string, restaurantName: string) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
   getTotal: () => number;
   getItemCount: () => number;
-  placeOrder: (paymentMethod: string) => Order;
+  placeOrder: (paymentMethod: string, deliveryAddress?: string) => Promise<Order | null>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+  fetchOrders: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -20,6 +24,40 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  const fetchOrders = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      setLoading(true);
+      const data = await apiService.getOrders();
+      // Transform backend data to frontend format
+      const transformedOrders = data.map((order: any) => ({
+        id: order.id,
+        items: order.items,
+        total: order.total,
+        status: order.status,
+        paymentMethod: order.payment_method,
+        transactionId: order.transaction_id,
+        createdAt: order.created_at,
+        restaurantName: order.restaurant_name,
+      }));
+      setOrders(transformedOrders);
+    } catch (error: any) {
+      toast.error('Failed to load orders');
+      console.error('Error fetching orders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchOrders();
+    }
+  }, [isAuthenticated]);
 
   const addItem = (menuItem: MenuItem, restaurantId: string, restaurantName: string) => {
     setItems(prev => {
@@ -46,29 +84,56 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const getTotal = () => items.reduce((sum, i) => sum + i.menuItem.price * i.quantity, 0);
   const getItemCount = () => items.reduce((sum, i) => sum + i.quantity, 0);
 
-  const placeOrder = (paymentMethod: string): Order => {
-    const order: Order = {
-      id: `ORD-${Date.now().toString(36).toUpperCase()}`,
-      items: [...items],
-      total: getTotal(),
-      status: 'placed',
-      paymentMethod,
-      transactionId: `TXN-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-      createdAt: new Date().toISOString(),
-      restaurantName: items[0]?.restaurantName || 'Unknown',
-    };
-    setOrders(prev => [order, ...prev]);
-    clearCart();
+  const placeOrder = async (paymentMethod: string, deliveryAddress = '123 Example Street, City'): Promise<Order | null> => {
+    if (!isAuthenticated) {
+      toast.error('Please login to place an order');
+      return null;
+    }
 
-    // Simulate order progress
-    const statuses: OrderStatus[] = ['accepted', 'preparing', 'out_for_delivery', 'delivered'];
-    statuses.forEach((status, idx) => {
-      setTimeout(() => {
-        setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status } : o));
-      }, (idx + 1) * 8000);
-    });
+    if (items.length === 0) {
+      toast.error('Cart is empty');
+      return null;
+    }
 
-    return order;
+    try {
+      setLoading(true);
+      const orderData = {
+        items: items.map(item => ({
+          id: item.menuItem.id,
+          name: item.menuItem.name,
+          price: item.menuItem.price,
+          quantity: item.quantity,
+        })),
+        paymentMethod,
+        deliveryAddress,
+        restaurantId: items[0].restaurantId,
+        restaurantName: items[0].restaurantName,
+      };
+
+      const backendOrder = await apiService.placeOrder(orderData);
+      
+      // Transform backend response to frontend format
+      const order: Order = {
+        id: backendOrder.id,
+        items: [...items],
+        total: backendOrder.total,
+        status: backendOrder.status,
+        paymentMethod: backendOrder.payment_method,
+        transactionId: backendOrder.transaction_id,
+        createdAt: backendOrder.created_at,
+        restaurantName: backendOrder.restaurant_name,
+      };
+
+      setOrders(prev => [order, ...prev]);
+      clearCart();
+      toast.success('Order placed successfully!');
+      return order;
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to place order');
+      return null;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateOrderStatus = (orderId: string, status: OrderStatus) => {
@@ -76,7 +141,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <CartContext.Provider value={{ items, orders, addItem, removeItem, updateQuantity, clearCart, getTotal, getItemCount, placeOrder, updateOrderStatus }}>
+    <CartContext.Provider value={{ 
+      items, 
+      orders, 
+      loading,
+      addItem, 
+      removeItem, 
+      updateQuantity, 
+      clearCart, 
+      getTotal, 
+      getItemCount, 
+      placeOrder, 
+      updateOrderStatus,
+      fetchOrders
+    }}>
       {children}
     </CartContext.Provider>
   );

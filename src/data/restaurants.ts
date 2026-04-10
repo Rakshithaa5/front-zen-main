@@ -41,6 +41,116 @@ export const restaurants: Restaurant[] = [
     image: 'https://images.unsplash.com/photo-1550966871-3ed3cdb51f3a?w=600', deliveryTime: '20-30 min',
     isVeg: true, address: '753 Birch Ave', description: 'Warming soups and wholesome meals'
   },
+  {
+    id: '9', name: 'Taco Tierra', cuisine: ['Mexican', 'Street Food'], rating: 4.5, priceRange: 1,
+    image: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=600', deliveryTime: '18-28 min',
+    isVeg: false, address: '88 Sunset Blvd', description: 'Bold tacos, burritos, and fiery salsas'
+  },
+  {
+    id: '10', name: 'Sushi Harbor', cuisine: ['Japanese', 'Sushi'], rating: 4.9, priceRange: 3,
+    image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600', deliveryTime: '25-35 min',
+    isVeg: false, address: '14 Harbor Point', description: 'Fresh rolls, nigiri, and premium sashimi'
+  },
+  {
+    id: '11', name: 'Curry Leaf', cuisine: ['South Indian', 'Vegetarian'], rating: 4.6, priceRange: 1,
+    image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600', deliveryTime: '20-30 min',
+    isVeg: true, address: '22 Temple Road', description: 'Crisp dosas, idlis, and coconut chutneys'
+  },
+  {
+    id: '12', name: 'Pho Lotus', cuisine: ['Vietnamese', 'Noodles'], rating: 4.4, priceRange: 2,
+    image: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=600', deliveryTime: '22-32 min',
+    isVeg: false, address: '101 Lantern St', description: 'Fragrant pho, rice bowls, and herb-packed broths'
+  },
+  {
+    id: '13', name: 'Mediterraneo', cuisine: ['Mediterranean', 'Grill'], rating: 4.7, priceRange: 2,
+    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600', deliveryTime: '25-35 min',
+    isVeg: true, address: '77 Olive Ave', description: 'Grilled plates, mezze, and bright Mediterranean flavors'
+  },
+  {
+    id: '14', name: 'Kebab Court', cuisine: ['Turkish', 'Grill'], rating: 4.5, priceRange: 2,
+    image: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600', deliveryTime: '30-40 min',
+    isVeg: false, address: '9 Bazaar Lane', description: 'Charcoal kebabs, wraps, and spiced rice'
+  },
+  {
+    id: '15', name: 'Pasta Fresca', cuisine: ['Italian', 'Pasta'], rating: 4.6, priceRange: 2,
+    image: 'https://images.unsplash.com/photo-1498579150354-2a0bd0d9b1d5?w=600', deliveryTime: '20-30 min',
+    isVeg: true, address: '44 Via Roma', description: 'Hand-tossed pasta with rich sauces and herbs'
+  },
+  {
+    id: '16', name: 'Nori House', cuisine: ['Asian Fusion', 'Bowls'], rating: 4.3, priceRange: 2,
+    image: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=600', deliveryTime: '25-35 min',
+    isVeg: false, address: '310 Pearl Street', description: 'Rice bowls, poke, and modern Asian comfort food'
+  },
+  {
+    id: '17', name: 'Grain & Greens', cuisine: ['Salads', 'Wellness'], rating: 4.8, priceRange: 2,
+    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600', deliveryTime: '15-25 min',
+    isVeg: true, address: '8 Spruce Court', description: 'Protein bowls, salads, and clean eating meals'
+  },
+  {
+    id: '18', name: 'Waffle Nest', cuisine: ['Breakfast', 'Desserts'], rating: 4.7, priceRange: 1,
+    image: 'https://images.unsplash.com/photo-1562376552-0d160a2f3b2b?w=600', deliveryTime: '15-20 min',
+    isVeg: true, address: '50 Morning Dr', description: 'Fresh waffles, pancakes, and brunch favorites'
+  },
+  {
+    id: '19', name: 'Smokehouse 19', cuisine: ['BBQ', 'American'], rating: 4.4, priceRange: 3,
+    image: 'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=600', deliveryTime: '35-45 min',
+    isVeg: false, address: '19 Hickory Rd', description: 'Slow-smoked meats with bold house-made sauces'
+  },
+  {
+    id: '20', name: 'Coconut Coast', cuisine: ['Thai', 'Curry'], rating: 4.5, priceRange: 2,
+    image: 'https://images.unsplash.com/photo-1559314809-0e4b5a0f1f89?w=600', deliveryTime: '25-35 min',
+    isVeg: false, address: '6 Beachfront Way', description: 'Thai curries, noodle dishes, and fragrant basil'
+  },
+  {
+    id: '21', name: 'Veggie Vault', cuisine: ['Vegan', 'Plant Based'], rating: 4.6, priceRange: 2,
+    image: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=600', deliveryTime: '18-28 min',
+    isVeg: true, address: '72 Willow Way', description: 'Plant-based burgers, bowls, and dairy-free treats'
+  },
+  {
+    id: '22', name: 'Dumpling Den', cuisine: ['Chinese', 'Dumplings'], rating: 4.7, priceRange: 1,
+    image: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?w=600', deliveryTime: '20-30 min',
+    isVeg: false, address: '15 Jade Market', description: 'Hand-folded dumplings, noodles, and chili oil specials'
+  },
+  {
+    id: '23', name: 'Ramen Realm', cuisine: ['Japanese', 'Ramen'], rating: 4.8, priceRange: 2,
+    image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=600', deliveryTime: '30-40 min',
+    isVeg: false, address: '12 Sakura Blvd', description: 'Deep broth ramen, soft eggs, and rich toppings'
+  },
+  {
+    id: '24', name: 'Bistro Bloom', cuisine: ['French', 'Bistro'], rating: 4.5, priceRange: 3,
+    image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600', deliveryTime: '30-40 min',
+    isVeg: true, address: '18 Rue Clair', description: 'Elegant bistro classics with a modern finish'
+  },
+  {
+    id: '25', name: 'Roll House', cuisine: ['Wraps', 'Quick Bites'], rating: 4.2, priceRange: 1,
+    image: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=600', deliveryTime: '12-22 min',
+    isVeg: false, address: '303 Rapid Ave', description: 'Fast wraps, rolls, and handheld comfort food'
+  },
+  {
+    id: '26', name: 'Cielo Cafe', cuisine: ['Cafe', 'Pastries'], rating: 4.4, priceRange: 2,
+    image: 'https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=600', deliveryTime: '10-20 min',
+    isVeg: true, address: '9 Cloud Nine', description: 'Coffee, pastries, and all-day brunch plates'
+  },
+  {
+    id: '27', name: 'Heritage Thali', cuisine: ['Indian', 'Thali'], rating: 4.7, priceRange: 2,
+    image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600', deliveryTime: '25-35 min',
+    isVeg: true, address: '64 Palace Circle', description: 'Regional thalis with rotating seasonal specialties'
+  },
+  {
+    id: '28', name: 'Seoul Street', cuisine: ['Korean', 'Street Food'], rating: 4.6, priceRange: 2,
+    image: 'https://images.unsplash.com/photo-1553163147-622ab57be1c7?w=600', deliveryTime: '20-30 min',
+    isVeg: false, address: '88 Neon Road', description: 'Korean fried chicken, rice bowls, and spicy noodles'
+  },
+  {
+    id: '29', name: 'Falafel Farm', cuisine: ['Middle Eastern', 'Vegetarian'], rating: 4.5, priceRange: 1,
+    image: 'https://images.unsplash.com/photo-1515443961218-a51367888e4b?w=600', deliveryTime: '18-28 min',
+    isVeg: true, address: '41 Oasis Street', description: 'Falafel, hummus, shawarma wraps, and fresh pita'
+  },
+  {
+    id: '30', name: 'Crisp Corner', cuisine: ['Fast Food', 'Snacks'], rating: 4.3, priceRange: 1,
+    image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600', deliveryTime: '15-25 min',
+    isVeg: false, address: '5 Market Square', description: 'Crowd-pleasing snacks, combos, and shareable bites'
+  },
 ];
 
 export const menuItems: MenuItem[] = [
