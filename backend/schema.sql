@@ -23,11 +23,16 @@ CREATE TABLE restaurants (
   rating numeric(2,1) DEFAULT 0,
   price_range int CHECK (price_range IN (1, 2, 3)),
   image text,
+  gallery_images text[] NOT NULL DEFAULT '{}',
   delivery_time text,
   is_veg boolean DEFAULT false,
   address text,
+  location text,
   description text,
-  owner_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  verification_doc text,
+  is_verified boolean NOT NULL DEFAULT false,
+  verified_at timestamptz,
+  owner_id uuid UNIQUE REFERENCES users(id) ON DELETE SET NULL,
   created_at timestamptz DEFAULT now()
 );
 
@@ -52,6 +57,7 @@ CREATE TABLE orders (
   restaurant_id text REFERENCES restaurants(id) ON DELETE SET NULL,
   restaurant_name text,
   items jsonb NOT NULL DEFAULT '[]',
+  currency text NOT NULL DEFAULT 'INR' CHECK (currency = 'INR'),
   total numeric(10,2) NOT NULL,
   status text NOT NULL DEFAULT 'placed'
     CHECK (status IN ('placed', 'accepted', 'preparing', 'out_for_delivery', 'delivered')),
@@ -66,42 +72,42 @@ CREATE TABLE orders (
 -- ============================================================
 INSERT INTO users (id, name, email, password_hash, role) VALUES
 ('00000000-0000-0000-0000-000000000001', 'Platform Admin', 'admin@moodbyte.com',
- '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'admin');
+ '$2a$10$iCvk4PKnNR/.a4aLFr0fV.C/Vn0oSQc8uM.sUD3YJgV.NHamL6ray', 'admin');
 
 -- ============================================================
 -- RESTAURANT OWNER ACCOUNTS  (password for all: Owner@123)
 -- ============================================================
 INSERT INTO users (id, name, email, password_hash, role) VALUES
-('10000000-0000-0000-0000-000000000001', 'Arjun Sharma',      'owner.spicegarden@moodbyte.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000002', 'Marco Rossi',       'owner.pizzaparadise@moodbyte.com',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000003', 'Priya Nair',        'owner.greenbowl@moodbyte.com',      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000004', 'Wei Chen',          'owner.dragonwok@moodbyte.com',      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000005', 'Jake Miller',       'owner.burgerbarn@moodbyte.com',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000006', 'Raza Khan',         'owner.biryanihouse@moodbyte.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000007', 'Meera Patel',       'owner.sweettooth@moodbyte.com',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000008', 'Linda Brooks',      'owner.soulandsoul@moodbyte.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000009', 'Carlos Mendez',     'owner.tacotierra@moodbyte.com',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000010', 'Kenji Tanaka',      'owner.sushiharbor@moodbyte.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000011', 'Lakshmi Iyer',      'owner.curryleaf@moodbyte.com',      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000012', 'Linh Nguyen',       'owner.pholotus@moodbyte.com',       '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000013', 'Nikos Papadopoulos','owner.mediterraneo@moodbyte.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000014', 'Ahmet Yilmaz',      'owner.kebabcourt@moodbyte.com',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000015', 'Sofia Conti',       'owner.pastafresca@moodbyte.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000016', 'Hana Kim',          'owner.norihouse@moodbyte.com',      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000017', 'Emma Walsh',        'owner.graingreens@moodbyte.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000018', 'Tom Baker',         'owner.wafflenest@moodbyte.com',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000019', 'Ray Thompson',      'owner.smokehouse19@moodbyte.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000020', 'Nong Srisuk',       'owner.coconutcoast@moodbyte.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000021', 'Zoe Green',         'owner.veggievault@moodbyte.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000022', 'Fang Liu',          'owner.dumplingden@moodbyte.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000023', 'Yuki Sato',         'owner.ramenrealm@moodbyte.com',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000024', 'Pierre Dubois',     'owner.bistroBloom@moodbyte.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000025', 'Sam Patel',         'owner.rollhouse@moodbyte.com',      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000026', 'Ana Flores',        'owner.cielocafe@moodbyte.com',      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000027', 'Vikram Rao',        'owner.heritagethali@moodbyte.com',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000028', 'Ji-ho Park',        'owner.seoulstreet@moodbyte.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000029', 'Omar Hassan',       'owner.falafelfarm@moodbyte.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner'),
-('10000000-0000-0000-0000-000000000030', 'Nina Cruz',         'owner.crispcorner@moodbyte.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniS', 'restaurant_owner');
+('10000000-0000-0000-0000-000000000001', 'Arjun Sharma',      'spicegarden@moodbyte.com',   '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000002', 'Marco Rossi',       'pizzaparadise@moodbyte.com',  '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000003', 'Priya Nair',        'greenbowl@moodbyte.com',      '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000004', 'Wei Chen',          'dragonwok@moodbyte.com',      '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000005', 'Jake Miller',       'burgerbarn@moodbyte.com',     '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000006', 'Raza Khan',         'biryanihouse@moodbyte.com',   '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000007', 'Meera Patel',       'sweettooth@moodbyte.com',     '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000008', 'Linda Brooks',      'soulandsoul@moodbyte.com',    '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000009', 'Carlos Mendez',     'tacotierra@moodbyte.com',     '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000010', 'Kenji Tanaka',      'sushiharbor@moodbyte.com',    '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000011', 'Lakshmi Iyer',      'curryleaf@moodbyte.com',      '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000012', 'Linh Nguyen',       'pholotus@moodbyte.com',       '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000013', 'Nikos Papadopoulos','mediterraneo@moodbyte.com',   '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000014', 'Ahmet Yilmaz',      'kebabcourt@moodbyte.com',     '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000015', 'Sofia Conti',       'pastafresca@moodbyte.com',    '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000016', 'Hana Kim',          'norihouse@moodbyte.com',      '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000017', 'Emma Walsh',        'graingreens@moodbyte.com',    '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000018', 'Tom Baker',         'wafflenest@moodbyte.com',     '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000019', 'Ray Thompson',      'smokehouse19@moodbyte.com',   '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000020', 'Nong Srisuk',       'coconutcoast@moodbyte.com',   '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000021', 'Zoe Green',         'veggievault@moodbyte.com',    '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000022', 'Fang Liu',          'dumplingden@moodbyte.com',    '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000023', 'Yuki Sato',         'ramenrealm@moodbyte.com',     '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000024', 'Pierre Dubois',     'bistrobloom@moodbyte.com',    '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000025', 'Sam Patel',         'rollhouse@moodbyte.com',      '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000026', 'Ana Flores',        'cielocafe@moodbyte.com',      '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000027', 'Vikram Rao',        'heritagethali@moodbyte.com',  '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000028', 'Ji-ho Park',        'seoulstreet@moodbyte.com',    '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000029', 'Omar Hassan',       'falafelfarm@moodbyte.com',    '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner'),
+('10000000-0000-0000-0000-000000000030', 'Nina Cruz',         'crispcorner@moodbyte.com',    '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy', 'restaurant_owner');
 
 -- ============================================================
 -- RESTAURANTS (with owner_id linked)

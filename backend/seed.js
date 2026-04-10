@@ -1,6 +1,9 @@
 require('dotenv').config();
 const supabase = require('./supabase');
 
+const ADMIN_PASSWORD_HASH = '$2a$10$iCvk4PKnNR/.a4aLFr0fV.C/Vn0oSQc8uM.sUD3YJgV.NHamL6ray';
+const OWNER_PASSWORD_HASH = '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy';
+
 const restaurants = [
   { id: '1', name: 'Spice Garden', cuisine: ['Indian', 'Spicy'], rating: 4.5, price_range: 2, image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600', delivery_time: '25-35 min', is_veg: false, address: '123 Main St', description: 'Authentic Indian cuisine with a modern twist' },
   { id: '2', name: 'Pizza Paradise', cuisine: ['Italian', 'Pizza'], rating: 4.2, price_range: 2, image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600', delivery_time: '20-30 min', is_veg: false, address: '456 Oak Ave', description: 'Wood-fired pizzas and Italian classics' },
@@ -33,6 +36,60 @@ const restaurants = [
   { id: '29', name: 'Falafel Farm', cuisine: ['Middle Eastern', 'Vegetarian'], rating: 4.5, price_range: 1, image: 'https://images.unsplash.com/photo-1515443961218-a51367888e4b?w=600', delivery_time: '18-28 min', is_veg: true, address: '41 Oasis Street', description: 'Falafel, hummus, shawarma wraps, and fresh pita' },
   { id: '30', name: 'Crisp Corner', cuisine: ['Fast Food', 'Snacks'], rating: 4.3, price_range: 1, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600', delivery_time: '15-25 min', is_veg: false, address: '5 Market Square', description: 'Crowd-pleasing snacks, combos, and shareable bites' },
 ];
+
+const ownerAccounts = [
+  { id: '10000000-0000-0000-0000-000000000001', name: 'Arjun Sharma', email: 'spicegarden@moodbyte.com', restaurantId: '1' },
+  { id: '10000000-0000-0000-0000-000000000002', name: 'Marco Rossi', email: 'pizzaparadise@moodbyte.com', restaurantId: '2' },
+  { id: '10000000-0000-0000-0000-000000000003', name: 'Priya Nair', email: 'greenbowl@moodbyte.com', restaurantId: '3' },
+  { id: '10000000-0000-0000-0000-000000000004', name: 'Wei Chen', email: 'dragonwok@moodbyte.com', restaurantId: '4' },
+  { id: '10000000-0000-0000-0000-000000000005', name: 'Jake Miller', email: 'burgerbarn@moodbyte.com', restaurantId: '5' },
+  { id: '10000000-0000-0000-0000-000000000006', name: 'Raza Khan', email: 'biryanihouse@moodbyte.com', restaurantId: '6' },
+  { id: '10000000-0000-0000-0000-000000000007', name: 'Meera Patel', email: 'sweettooth@moodbyte.com', restaurantId: '7' },
+  { id: '10000000-0000-0000-0000-000000000008', name: 'Linda Brooks', email: 'soulandsoul@moodbyte.com', restaurantId: '8' },
+  { id: '10000000-0000-0000-0000-000000000009', name: 'Carlos Mendez', email: 'tacotierra@moodbyte.com', restaurantId: '9' },
+  { id: '10000000-0000-0000-0000-000000000010', name: 'Kenji Tanaka', email: 'sushiharbor@moodbyte.com', restaurantId: '10' },
+  { id: '10000000-0000-0000-0000-000000000011', name: 'Lakshmi Iyer', email: 'curryleaf@moodbyte.com', restaurantId: '11' },
+  { id: '10000000-0000-0000-0000-000000000012', name: 'Linh Nguyen', email: 'pholotus@moodbyte.com', restaurantId: '12' },
+  { id: '10000000-0000-0000-0000-000000000013', name: 'Nikos Papadopoulos', email: 'mediterraneo@moodbyte.com', restaurantId: '13' },
+  { id: '10000000-0000-0000-0000-000000000014', name: 'Ahmet Yilmaz', email: 'kebabcourt@moodbyte.com', restaurantId: '14' },
+  { id: '10000000-0000-0000-0000-000000000015', name: 'Sofia Conti', email: 'pastafresca@moodbyte.com', restaurantId: '15' },
+  { id: '10000000-0000-0000-0000-000000000016', name: 'Hana Kim', email: 'norihouse@moodbyte.com', restaurantId: '16' },
+  { id: '10000000-0000-0000-0000-000000000017', name: 'Emma Walsh', email: 'graingreens@moodbyte.com', restaurantId: '17' },
+  { id: '10000000-0000-0000-0000-000000000018', name: 'Tom Baker', email: 'wafflenest@moodbyte.com', restaurantId: '18' },
+  { id: '10000000-0000-0000-0000-000000000019', name: 'Ray Thompson', email: 'smokehouse19@moodbyte.com', restaurantId: '19' },
+  { id: '10000000-0000-0000-0000-000000000020', name: 'Nong Srisuk', email: 'coconutcoast@moodbyte.com', restaurantId: '20' },
+  { id: '10000000-0000-0000-0000-000000000021', name: 'Zoe Green', email: 'veggievault@moodbyte.com', restaurantId: '21' },
+  { id: '10000000-0000-0000-0000-000000000022', name: 'Fang Liu', email: 'dumplingden@moodbyte.com', restaurantId: '22' },
+  { id: '10000000-0000-0000-0000-000000000023', name: 'Yuki Sato', email: 'ramenrealm@moodbyte.com', restaurantId: '23' },
+  { id: '10000000-0000-0000-0000-000000000024', name: 'Pierre Dubois', email: 'bistrobloom@moodbyte.com', restaurantId: '24' },
+  { id: '10000000-0000-0000-0000-000000000025', name: 'Sam Patel', email: 'rollhouse@moodbyte.com', restaurantId: '25' },
+  { id: '10000000-0000-0000-0000-000000000026', name: 'Ana Flores', email: 'cielocafe@moodbyte.com', restaurantId: '26' },
+  { id: '10000000-0000-0000-0000-000000000027', name: 'Vikram Rao', email: 'heritagethali@moodbyte.com', restaurantId: '27' },
+  { id: '10000000-0000-0000-0000-000000000028', name: 'Ji-ho Park', email: 'seoulstreet@moodbyte.com', restaurantId: '28' },
+  { id: '10000000-0000-0000-0000-000000000029', name: 'Omar Hassan', email: 'falafelfarm@moodbyte.com', restaurantId: '29' },
+  { id: '10000000-0000-0000-0000-000000000030', name: 'Nina Cruz', email: 'crispcorner@moodbyte.com', restaurantId: '30' },
+];
+
+const users = [
+  { id: '00000000-0000-0000-0000-000000000001', name: 'Platform Admin', email: 'admin@moodbyte.com', password_hash: ADMIN_PASSWORD_HASH, role: 'admin' },
+  ...ownerAccounts.map(owner => ({
+    id: owner.id,
+    name: owner.name,
+    email: owner.email,
+    password_hash: OWNER_PASSWORD_HASH,
+    role: 'restaurant_owner',
+  })),
+];
+const restaurantsWithOwners = restaurants.map(restaurant => {
+  const owner = ownerAccounts.find(account => account.restaurantId === restaurant.id);
+  return {
+    ...restaurant,
+    owner_id: owner?.id || null,
+    verification_doc: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    is_verified: true,
+    verified_at: new Date().toISOString(),
+  };
+});
 
 const menuBlueprints = [
   { category: 'Beverages', name: 'Sparkling Water', description: 'Chilled sparkling water with a clean finish', price: 2.99, image: 'https://images.unsplash.com/photo-1527761939622-911909463d49?w=400', isVeg: true },
@@ -142,7 +199,7 @@ function buildMenuItemsForRestaurant(restaurant) {
     restaurant_id: restaurant.id,
     name: `${theme} ${item.name}`,
     description: `${item.description} served fresh at ${restaurant.name}`,
-    price: Number((item.price + priceBoost).toFixed(2)),
+    price: Number(((item.price + priceBoost) * 100).toFixed(2)),
     category: item.category,
     image: item.image,
     is_veg: item.isVeg,
@@ -153,8 +210,16 @@ function buildMenuItemsForRestaurant(restaurant) {
 const menuItems = restaurants.flatMap(buildMenuItemsForRestaurant);
 
 async function seed() {
+  console.log('Seeding users...');
+  const { error: uErr } = await supabase.from('users').upsert(users);
+  if (uErr) { console.error('Users error:', uErr.message); process.exit(1); }
+
   console.log('Seeding restaurants...');
-  const { error: rErr } = await supabase.from('restaurants').upsert(restaurants);
+  let { error: rErr } = await supabase.from('restaurants').upsert(restaurantsWithOwners);
+  if (rErr?.message?.includes("'owner_id' column")) {
+    console.warn('owner_id column missing on restaurants table, using compatibility mode');
+    ({ error: rErr } = await supabase.from('restaurants').upsert(restaurants));
+  }
   if (rErr) { console.error('Restaurants error:', rErr.message); process.exit(1); }
 
   console.log('Seeding menu items...');

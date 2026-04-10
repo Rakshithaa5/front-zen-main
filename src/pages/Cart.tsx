@@ -43,7 +43,7 @@ const Cart = () => {
                 <Plus className="h-3.5 w-3.5" />
               </Button>
             </div>
-            <span className="w-16 text-right font-semibold text-foreground">${(item.menuItem.price * item.quantity).toFixed(2)}</span>
+            <span className="w-16 text-right font-semibold text-foreground">₹{(item.menuItem.price * item.quantity).toFixed(2)}</span>
             <Button size="icon" variant="ghost" onClick={() => removeItem(item.menuItem.id)}>
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
@@ -54,10 +54,10 @@ const Cart = () => {
       {/* Summary */}
       <div className="mt-6 rounded-xl border bg-card p-6">
         <div className="space-y-2 text-sm">
-          <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="font-medium text-foreground">${total.toFixed(2)}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Delivery Fee</span><span className="font-medium text-foreground">${deliveryFee.toFixed(2)}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="font-medium text-foreground">₹{total.toFixed(2)}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Delivery Fee</span><span className="font-medium text-foreground">₹{deliveryFee.toFixed(2)}</span></div>
           <div className="border-t pt-2 mt-2 flex justify-between text-base font-bold">
-            <span className="text-foreground">Total</span><span className="text-foreground">${(total + deliveryFee).toFixed(2)}</span>
+            <span className="text-foreground">Total</span><span className="text-foreground">₹{(total + deliveryFee).toFixed(2)}</span>
           </div>
         </div>
         <Button className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90" size="lg" onClick={() => navigate('/checkout')}>

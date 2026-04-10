@@ -1,15 +1,21 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { ArrowRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MoodSelector from '@/components/MoodSelector';
 import RestaurantCard from '@/components/RestaurantCard';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { Mood } from '@/data/types';
 
 const Index = () => {
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
   const { restaurants } = useApp();
+  const { user, isAuthenticated } = useAuth();
+
+  if (isAuthenticated && user?.role === 'restaurant_owner') {
+    return <Navigate to="/owner" replace />;
+  }
 
   const filteredRestaurants = selectedMood
     ? restaurants.filter(r => r.cuisine.some(c => selectedMood.categories.includes(c)))
@@ -32,6 +38,28 @@ const Index = () => {
               </Button>
             </Link>
           </div>
+        </div>
+      </section>
+
+      <section className="container -mt-8 pb-10">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {restaurants.slice(0, 4).map((restaurant) => (
+            <Link key={restaurant.id} to={`/restaurant/${restaurant.id}`} className="group relative overflow-hidden rounded-2xl border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
+              <div className="relative h-40">
+                <img
+                  src={restaurant.image}
+                  alt={restaurant.name}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-left">
+                  <p className="text-sm font-medium text-white/80">Featured restaurant</p>
+                  <h3 className="font-display text-xl font-bold text-white">{restaurant.name}</h3>
+                  <p className="mt-1 text-xs text-white/75 line-clamp-1">{restaurant.cuisine.join(' • ')}</p>
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
       </section>
 

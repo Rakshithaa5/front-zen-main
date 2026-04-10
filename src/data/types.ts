@@ -5,10 +5,15 @@ export interface Restaurant {
   rating: number;
   priceRange: 1 | 2 | 3;
   image: string;
+  imageGallery: string[];
   deliveryTime: string;
   isVeg: boolean;
   address: string;
+  location: string;
   description: string;
+  verificationDoc: string;
+  isVerified: boolean;
+  verifiedAt?: string | null;
 }
 
 export interface MenuItem {

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { MOODS } from '@/data/types';
-import { Plus, Minus, Sparkles } from 'lucide-react';
+import { Plus, Minus, Sparkles, Leaf, Beef } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -10,6 +11,8 @@ const MoodRecommendations = () => {
   const [selectedMood, setSelectedMood] = useState(MOODS[0]);
   const { restaurants, menuItems } = useApp();
   const { addItem, items: cartItems, updateQuantity } = useCart();
+  const { user } = useAuth();
+  const canOrder = user?.role === 'customer';
 
   // Filter restaurants by mood categories
   const matchingRestaurants = restaurants.filter(r => 
@@ -110,11 +113,12 @@ const MoodRecommendations = () => {
                         alt={item.name}
                         className="h-full w-full object-cover transition-transform group-hover:scale-110"
                       />
-                      {item.isVeg && (
-                        <Badge className="absolute top-3 right-3 bg-success text-success-foreground">
-                          Veg
-                        </Badge>
-                      )}
+                      <Badge
+                        className={`absolute top-3 right-3 gap-1 ${item.isVeg ? 'bg-success text-success-foreground' : 'bg-destructive text-destructive-foreground'}`}
+                      >
+                        {item.isVeg ? <Leaf className="h-3 w-3" /> : <Beef className="h-3 w-3" />}
+                        {item.isVeg ? 'Veg' : 'Non-Veg'}
+                      </Badge>
                     </div>
 
                     <div className="p-4">
@@ -136,7 +140,9 @@ const MoodRecommendations = () => {
                           ₹{item.price.toFixed(2)}
                         </span>
 
-                        {qty === 0 ? (
+                        {!canOrder ? (
+                          <Badge variant="outline" className="text-xs">Customer Only</Badge>
+                        ) : qty === 0 ? (
                           <Button
                             size="sm"
                             onClick={() => addItem(item, item.restaurantId, restaurant?.name || '')}
