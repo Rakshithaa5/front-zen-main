@@ -21,6 +21,7 @@ router.post('/', authMiddleware, async (req, res) => {
       restaurant_id: restaurantId,
       restaurant_name: restaurantName,
       items,
+      currency: 'INR',
       total,
       status: 'placed',
       payment_method: paymentMethod,
@@ -36,9 +37,17 @@ router.post('/', authMiddleware, async (req, res) => {
 
 // GET /api/orders — get current user's orders
 router.get('/', authMiddleware, async (req, res) => {
-  const query = req.user.role === 'admin'
-    ? supabase.from('orders').select('*')
-    : supabase.from('orders').select('*').eq('user_id', req.user.id);
+  let query = supabase.from('orders').select('*');
+
+  if (req.user.role === 'customer') {
+    query = query.eq('user_id', req.user.id);
+  } else if (req.user.role === 'restaurant_owner') {
+    if (!req.user.restaurantId) {
+      return res.status(403).json({ error: 'No restaurant assigned to this account' });
+    }
+
+    query = query.eq('restaurant_id', req.user.restaurantId);
+  }
 
   const { data, error } = await query.order('created_at', { ascending: false });
   if (error) return res.status(500).json({ error: error.message });
@@ -55,9 +64,21 @@ router.get('/:id', authMiddleware, async (req, res) => {
 
   if (error || !data) return res.status(404).json({ error: 'Order not found' });
 
-  // Only allow owner or admin to see any order
-  if (req.user.role !== 'admin' && data.user_id !== req.user.id)
+  if (req.user.role === 'admin') {
+    return res.json(data);
+  }
+
+  if (req.user.role === 'restaurant_owner') {
+    if (!req.user.restaurantId || data.restaurant_id !== req.user.restaurantId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    return res.json(data);
+  }
+
+  if (data.user_id !== req.user.id) {
     return res.status(403).json({ error: 'Forbidden' });
+  }
 
   res.json(data);
 });
@@ -66,6 +87,22 @@ router.get('/:id', authMiddleware, async (req, res) => {
 router.patch('/:id/status', authMiddleware, async (req, res) => {
   if (!['admin', 'restaurant_owner'].includes(req.user.role))
     return res.status(403).json({ error: 'Forbidden' });
+
+  const { data: existingOrder, error: fetchError } = await supabase
+    .from('orders')
+    .select('id, restaurant_id')
+    .eq('id', req.params.id)
+    .single();
+
+  if (fetchError || !existingOrder) {
+    return res.status(404).json({ error: 'Order not found' });
+  }
+
+  if (req.user.role === 'restaurant_owner') {
+    if (!req.user.restaurantId || existingOrder.restaurant_id !== req.user.restaurantId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  }
 
   const { status } = req.body;
   if (!VALID_STATUSES.includes(status))

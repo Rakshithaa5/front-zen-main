@@ -77,6 +77,53 @@ class ApiService {
     return this.request(`/restaurants/${restaurantId}/menu${params}`);
   }
 
+  async createMenuItem(itemData) {
+    return this.request('/menu', {
+      method: 'POST',
+      body: itemData,
+    });
+  }
+
+  async updateMenuItem(id, itemData) {
+    return this.request(`/menu/${id}`, {
+      method: 'PUT',
+      body: itemData,
+    });
+  }
+
+  async updateMenuAvailability(id, isAvailable) {
+    return this.request(`/menu/${id}/availability`, {
+      method: 'PATCH',
+      body: { isAvailable },
+    });
+  }
+
+  async deleteMenuItem(id) {
+    return this.request(`/menu/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async uploadMenuImage(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch(`${API_BASE}/menu/upload-image`, {
+      method: 'POST',
+      headers: {
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Image upload failed');
+    }
+
+    return data;
+  }
+
   // Orders
   async placeOrder(orderData) {
     return this.request('/orders', {

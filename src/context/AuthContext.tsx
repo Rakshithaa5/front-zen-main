@@ -31,30 +31,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // For now, we'll just check if it exists
       const userData = localStorage.getItem('user');
       if (userData) {
-        setUser(JSON.parse(userData));
+        try {
+          setUser(JSON.parse(userData) as User);
+        } catch {
+          localStorage.removeItem('user');
+          apiService.logout();
+        }
       }
     }
     setLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
-    try {
-      const response = await apiService.login({ email, password });
-      setUser(response.user);
-      localStorage.setItem('user', JSON.stringify(response.user));
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiService.login({ email, password });
+    setUser(response.user);
+    localStorage.setItem('user', JSON.stringify(response.user));
   };
 
   const register = async (name: string, email: string, password: string, role = 'customer') => {
-    try {
-      const response = await apiService.register({ name, email, password, role });
-      setUser(response.user);
-      localStorage.setItem('user', JSON.stringify(response.user));
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiService.register({ name, email, password, role });
+    setUser(response.user);
+    localStorage.setItem('user', JSON.stringify(response.user));
   };
 
   const logout = () => {

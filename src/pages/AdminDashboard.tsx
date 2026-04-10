@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trash2, Plus, TrendingUp, ShoppingBag, Store, DollarSign, Users } from 'lucide-react';
+import { Trash2, Plus, TrendingUp, ShoppingBag, Store, IndianRupee, Users, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -91,11 +91,11 @@ const AdminDashboard = () => {
         <div className="rounded-xl border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10">
-              <DollarSign className="h-5 w-5 text-warning" />
+              <IndianRupee className="h-5 w-5 text-warning" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Revenue</p>
-              <p className="text-2xl font-bold text-foreground">${totalRevenue.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-foreground">₹{totalRevenue.toFixed(2)}</p>
             </div>
           </div>
         </div>
@@ -106,7 +106,7 @@ const AdminDashboard = () => {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Avg Order</p>
-              <p className="text-2xl font-bold text-foreground">${orders.length > 0 ? (totalRevenue / orders.length).toFixed(2) : '0.00'}</p>
+              <p className="text-2xl font-bold text-foreground">₹{orders.length > 0 ? (totalRevenue / orders.length).toFixed(2) : '0.00'}</p>
             </div>
           </div>
         </div>
@@ -179,7 +179,7 @@ const AdminDashboard = () => {
                   </div>
                   <div className="flex items-center gap-3">
                     <Badge>{order.status.replace(/_/g, ' ')}</Badge>
-                    <span className="font-semibold text-foreground">${order.total.toFixed(2)}</span>
+                    <span className="font-semibold text-foreground">₹{order.total.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

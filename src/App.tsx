@@ -18,6 +18,7 @@ import Orders from "./pages/Orders";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import OwnerDashboard from "./pages/OwnerDashboard";
+import OwnerAnalytics from "./pages/OwnerAnalytics";
 import CustomerProfile from "./pages/CustomerProfile";
 import MoodRecommendations from "./pages/MoodRecommendations";
 import NotFound from "./pages/NotFound";
@@ -38,23 +39,31 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/restaurants" element={<Restaurants />} />
                 <Route path="/restaurant/:id" element={<RestaurantDetail />} />
-                <Route path="/cart" element={<Cart />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/mood-recommendations" element={<MoodRecommendations />} />
+                <Route path="/cart" element={
+                  <ProtectedRoute allowedRoles={['customer']}>
+                    <Cart />
+                  </ProtectedRoute>
+                } />
+                <Route path="/mood-recommendations" element={
+                  <ProtectedRoute allowedRoles={['customer']}>
+                    <MoodRecommendations />
+                  </ProtectedRoute>
+                } />
                 
                 {/* Protected Routes - Require Authentication */}
                 <Route path="/checkout" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['customer']}>
                     <Checkout />
                   </ProtectedRoute>
                 } />
                 <Route path="/order/:id" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['customer']}>
                     <OrderTracking />
                   </ProtectedRoute>
                 } />
                 <Route path="/orders" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['customer']}>
                     <Orders />
                   </ProtectedRoute>
                 } />
@@ -75,6 +84,11 @@ const App = () => (
                 <Route path="/owner" element={
                   <ProtectedRoute allowedRoles={['restaurant_owner']}>
                     <OwnerDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/dashboard" element={
+                  <ProtectedRoute allowedRoles={['restaurant_owner']}>
+                    <OwnerAnalytics />
                   </ProtectedRoute>
                 } />
                 

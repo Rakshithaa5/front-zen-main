@@ -26,8 +26,9 @@ const Navbar = () => {
         </Link>
 
         <div className="hidden items-center gap-6 md:flex">
-          <Link to="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Home</Link>
-          <Link to="/restaurants" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Restaurants</Link>
+          {user?.role !== 'restaurant_owner' && (
+            <Link to="/restaurants" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Restaurants</Link>
+          )}
           
           {isAuthenticated && user?.role === 'customer' && (
             <>
@@ -39,9 +40,14 @@ const Navbar = () => {
           )}
           
           {isAuthenticated && user?.role === 'restaurant_owner' && (
-            <Link to="/owner" className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              <ChefHat className="h-3.5 w-3.5" /> Dashboard
-            </Link>
+            <>
+              <Link to="/owner" className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                <ChefHat className="h-3.5 w-3.5" /> Owner Home
+              </Link>
+              <Link to="/owner/dashboard" className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                <Shield className="h-3.5 w-3.5" /> Dashboard
+              </Link>
+            </>
           )}
           
           {isAuthenticated && user?.role === 'admin' && (

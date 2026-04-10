@@ -1,20 +1,24 @@
 import { useParams } from 'react-router-dom';
-import { Star, Clock, MapPin, Plus, Minus, Leaf } from 'lucide-react';
+import { Star, Clock, MapPin, Plus, Minus, Leaf, Beef } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useApp } from '@/context/AppContext';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { useState, useMemo, useEffect } from 'react';
+import { MenuItem } from '@/data/types';
 
 const RestaurantDetail = () => {
   const { id } = useParams();
   const { restaurants, fetchMenuItems } = useApp();
-  const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const restaurant = restaurants.find(r => r.id === id);
   const categories = [...new Set(menuItems.map(m => m.category))];
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { addItem, items: cartItems, updateQuantity } = useCart();
+  const { user } = useAuth();
+  const canOrder = user?.role === 'customer';
 
   const filteredItems = useMemo(() =>
     selectedCategory ? menuItems.filter(i => i.category === selectedCategory) : menuItems
@@ -71,13 +75,18 @@ const RestaurantDetail = () => {
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-foreground">{item.name}</h3>
-                      {item.isVeg && <Leaf className="h-3.5 w-3.5 text-success" />}
+                      <Badge variant="outline" className={`gap-1 text-xs ${item.isVeg ? 'border-success/40 text-success' : 'border-destructive/40 text-destructive'}`}>
+                        {item.isVeg ? <Leaf className="h-3 w-3" /> : <Beef className="h-3 w-3" />}
+                        {item.isVeg ? 'Veg' : 'Non-Veg'}
+                      </Badge>
                     </div>
                     <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{item.description}</p>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     <span className="font-semibold text-foreground">₹{item.price.toFixed(2)}</span>
-                    {qty === 0 ? (
+                    {!canOrder ? (
+                      <Badge variant="outline" className="text-xs">Owner View</Badge>
+                    ) : qty === 0 ? (
                       <Button size="sm" onClick={() => addItem(item, restaurant.id, restaurant.name)} className="gap-1 bg-primary text-primary-foreground hover:bg-primary/90">
                         <Plus className="h-3.5 w-3.5" /> Add
                       </Button>

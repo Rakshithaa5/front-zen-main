@@ -59,6 +59,10 @@ router.put('/:id', authMiddleware, async (req, res) => {
   if (!['admin', 'restaurant_owner'].includes(req.user.role))
     return res.status(403).json({ error: 'Forbidden' });
 
+  if (req.user.role === 'restaurant_owner' && req.user.restaurantId !== req.params.id) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
   const { data, error } = await supabase
     .from('restaurants')
     .update(req.body)

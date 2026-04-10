@@ -1,11 +1,31 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
+const uploadsDir = path.join(__dirname, 'uploads');
 
-app.use(cors({ origin: 'http://localhost:8080', credentials: true }));
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const allowedOrigins = ['http://localhost:8080', 'http://localhost:5173'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow non-browser clients and configured local frontend origins.
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
 app.use(express.json());
+app.use('/uploads', express.static(uploadsDir));
 
 // Root route
 app.get('/', (req, res) => {

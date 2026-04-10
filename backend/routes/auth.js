@@ -2,6 +2,7 @@ const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const supabase = require('../supabase');
+const ownerRestaurantMap = require('../ownerRestaurantMap');
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -46,12 +47,17 @@ router.post('/login', async (req, res) => {
   // If owner, fetch their restaurant_id
   let restaurantId = null;
   if (user.role === 'restaurant_owner') {
-    const { data: restaurant } = await supabase
+    const { data: restaurant, error: restaurantError } = await supabase
       .from('restaurants')
       .select('id')
       .eq('owner_id', user.id)
       .single();
-    restaurantId = restaurant?.id || null;
+
+    if (!restaurantError && restaurant?.id) {
+      restaurantId = restaurant.id;
+    } else {
+      restaurantId = ownerRestaurantMap[user.email] || null;
+    }
   }
 
   const token = jwt.sign(

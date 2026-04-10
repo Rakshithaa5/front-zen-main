@@ -143,7 +143,7 @@ const CustomerProfile = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-foreground">${order.total.toFixed(2)}</p>
+                        <p className="font-semibold text-foreground">₹{order.total.toFixed(2)}</p>
                       </div>
                     </div>
                   </Link>
@@ -164,7 +164,7 @@ const CustomerProfile = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Total Spent</span>
-                <span className="text-2xl font-bold text-primary">${totalSpent.toFixed(2)}</span>
+                <span className="text-2xl font-bold text-primary">₹{totalSpent.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Member Since</span>
