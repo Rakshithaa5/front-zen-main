@@ -144,6 +144,19 @@ INSERT INTO restaurants (id, name, cuisine, rating, price_range, image, delivery
 ('29', 'Falafel Farm',    '{"Middle Eastern",Vegetarian}',     4.5, 1, 'https://images.unsplash.com/photo-1515443961218-a51367888e4b?w=600', '18-28 min', true,  '41 Oasis Street',   'Falafel, hummus, shawarma wraps, and fresh pita',       '10000000-0000-0000-0000-000000000029'),
 ('30', 'Crisp Corner',    '{"Fast Food",Snacks}',              4.3, 1, 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600', '15-25 min', false, '5 Market Square',   'Crowd-pleasing snacks, combos, and shareable bites',    '10000000-0000-0000-0000-000000000030');
 
+-- Ratings table
+CREATE TABLE ratings (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id text REFERENCES orders(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  restaurant_id text REFERENCES restaurants(id) ON DELETE CASCADE,
+  restaurant_rating numeric(2,1) NOT NULL CHECK (restaurant_rating BETWEEN 1 AND 5),
+  item_ratings jsonb DEFAULT '[]',
+  review text,
+  created_at timestamptz DEFAULT now(),
+  UNIQUE(order_id)
+);
+
 -- Verify
 SELECT 'Users' as tbl, count(*) FROM users
 UNION ALL SELECT 'Restaurants', count(*) FROM restaurants;
