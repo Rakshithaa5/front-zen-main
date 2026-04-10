@@ -1,5 +1,6 @@
 require('dotenv').config();
 const supabase = require('./supabase');
+const { buildCatalogMenuItemsForRestaurant } = require('./menuCatalog');
 
 const ADMIN_PASSWORD_HASH = '$2a$10$iCvk4PKnNR/.a4aLFr0fV.C/Vn0oSQc8uM.sUD3YJgV.NHamL6ray';
 const OWNER_PASSWORD_HASH = '$2a$10$qTytfi2nvS.fj8C4Uxlb2.PdEZXDsOEL.cWZFbzR.uuzLM36DBPQy';
@@ -250,7 +251,13 @@ function buildMenuItemsForRestaurant(restaurant) {
   }));
 }
 
-const menuItems = restaurants.flatMap(buildMenuItemsForRestaurant);
+const menuItems = restaurants.flatMap((restaurant) => {
+  const fromCatalog = buildCatalogMenuItemsForRestaurant(restaurant, restaurant.price_range);
+  if (fromCatalog.length > 0) {
+    return fromCatalog;
+  }
+  return buildMenuItemsForRestaurant(restaurant);
+});
 
 async function seed() {
   console.log('Seeding users...');
