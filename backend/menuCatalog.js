@@ -179,6 +179,33 @@ function inferCategory(itemName) {
 }
 
 function getCategoryImage(category, itemName, restaurantName, index) {
+  if (restaurantName === 'Grain & Greens') {
+    const grainImages = {
+      'Quinoa Buddha Bowl': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800',
+      'Falafel Grain Bowl': 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=800',
+      'Roasted Veggie Bowl': 'https://images.unsplash.com/photo-1547592180-85f173990554?w=800',
+      'Pesto Pasta Salad': 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800',
+      'Mediterranean Couscous': 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800',
+      'Avocado Toast': 'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=800',
+      'Lentil Power Bowl': 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800',
+      'Beetroot Hummus Wrap': 'https://images.unsplash.com/photo-1547592180-85f173990554?w=800',
+      'Sweet Potato Bowl': 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800',
+      'Chickpea Spinach Salad': 'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=800',
+      'Brown Rice & Edamame Bowl': 'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=800',
+      'Turmeric Cauliflower Bowl': 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800',
+      'Kale Caesar Salad': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800',
+      'Mango Avocado Salad': 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=800',
+      'Detox Green Juice': 'https://images.unsplash.com/photo-1514995669114-6081e934b693?w=800',
+      'Almond Butter Smoothie': 'https://images.unsplash.com/photo-1505252585461-04db1eb84625?w=800',
+      'Overnight Oats': 'https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=800',
+      'Chia Pudding': 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800',
+    };
+
+    if (grainImages[itemName]) {
+      return grainImages[itemName];
+    }
+  }
+
   if (restaurantName === 'Sushi Harbor') {
     const sushiImages = {
       'Salmon Nigiri': 'https://images.unsplash.com/photo-1579584425555-c3fb46f1c6bf?w=800',
@@ -186,19 +213,19 @@ function getCategoryImage(category, itemName, restaurantName, index) {
       'California Roll': 'https://images.unsplash.com/photo-1553621042-f6e147245754?w=800',
       'Dragon Roll': 'https://images.unsplash.com/photo-1607301405390-d831c242f59b?w=800',
       'Spicy Tuna Maki': 'https://images.unsplash.com/photo-1625944525533-473f1bf3f1eb?w=800',
-      'Avocado Roll': 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800',
+      'Avocado Roll': 'https://images.unsplash.com/photo-1574624614441-24f5f86e2b03?w=800',
       'Ebi Tempura Roll': 'https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=800',
-      'Rainbow Roll': 'https://images.unsplash.com/photo-1607301405390-d831c242f59b?w=800',
-      'Cucumber Maki': 'https://images.unsplash.com/photo-1553621042-f6e147245754?w=800',
-      'Salmon Roe Gunkan': 'https://images.unsplash.com/photo-1579584425555-c3fb46f1c6bf?w=800',
-      'Edamame': 'https://images.unsplash.com/photo-1626201758592-44a4b0f5c6a1?w=800',
-      'Miso Soup': 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800',
-      'Gyoza': 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800',
-      'Chicken Ramen': 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=800',
-      'Agedashi Tofu': 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800',
-      'Takoyaki': 'https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=800',
-      'Green Tea Ice Cream': 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=800',
-      'Matcha Latte': 'https://images.unsplash.com/photo-1517701550927-30cf4ba1c3e0?w=800',
+      'Rainbow Roll': 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800',
+      'Cucumber Maki': 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800',
+      'Salmon Roe Gunkan': 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800',
+      'Edamame': 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800',
+      'Miso Soup': 'https://images.unsplash.com/photo-1626201758592-44a4b0f5c6a1?w=800',
+      'Gyoza': 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=800',
+      'Chicken Ramen': 'https://images.unsplash.com/photo-1517701550927-30cf4ba1c3e0?w=800',
+      'Agedashi Tofu': 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800',
+      'Takoyaki': 'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=800',
+      'Green Tea Ice Cream': 'https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=800',
+      'Matcha Latte': 'https://images.unsplash.com/photo-1515823064-d6e0c04616a7?w=800',
     };
 
     if (sushiImages[itemName]) {
