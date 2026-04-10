@@ -22,7 +22,7 @@ const restaurants = [
   { id: '15', name: 'Pasta Fresca', cuisine: ['Italian', 'Pasta'], rating: 4.6, price_range: 2, image: 'https://images.unsplash.com/photo-1498579150354-2a0bd0d9b1d5?w=600', delivery_time: '20-30 min', is_veg: true, address: '44 Via Roma', description: 'Hand-tossed pasta with rich sauces and herbs' },
   { id: '16', name: 'Nori House', cuisine: ['Asian Fusion', 'Bowls'], rating: 4.3, price_range: 2, image: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=600', delivery_time: '25-35 min', is_veg: false, address: '310 Pearl Street', description: 'Rice bowls, poke, and modern Asian comfort food' },
   { id: '17', name: 'Grain & Greens', cuisine: ['Salads', 'Wellness'], rating: 4.8, price_range: 2, image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600', delivery_time: '15-25 min', is_veg: true, address: '8 Spruce Court', description: 'Protein bowls, salads, and clean eating meals' },
-  { id: '18', name: 'Waffle Nest', cuisine: ['Breakfast', 'Desserts'], rating: 4.7, price_range: 1, image: 'https://images.unsplash.com/photo-1562376552-0d160a2f3b2b?w=600', delivery_time: '15-20 min', is_veg: true, address: '50 Morning Dr', description: 'Fresh waffles, pancakes, and brunch favorites' },
+  { id: '18', name: 'Waffle Nest', cuisine: ['Breakfast', 'Desserts'], rating: 4.7, price_range: 1, image: 'https://images.unsplash.com/photo-1513442542250-854d436a73f2?w=600', delivery_time: '15-20 min', is_veg: true, address: '50 Morning Dr', description: 'Fresh waffles, pancakes, and brunch favorites' },
   { id: '19', name: 'Smokehouse 19', cuisine: ['BBQ', 'American'], rating: 4.4, price_range: 3, image: 'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=600', delivery_time: '35-45 min', is_veg: false, address: '19 Hickory Rd', description: 'Slow-smoked meats with bold house-made sauces' },
   { id: '20', name: 'Coconut Coast', cuisine: ['Thai', 'Curry'], rating: 4.5, price_range: 2, image: 'https://images.unsplash.com/photo-1559314809-0e4b5a0f1f89?w=600', delivery_time: '25-35 min', is_veg: false, address: '6 Beachfront Way', description: 'Thai curries, noodle dishes, and fragrant basil' },
   { id: '21', name: 'Veggie Vault', cuisine: ['Vegan', 'Plant Based'], rating: 4.6, price_range: 2, image: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=600', delivery_time: '18-28 min', is_veg: true, address: '72 Willow Way', description: 'Plant-based burgers, bowls, and dairy-free treats' },
@@ -102,8 +102,8 @@ const menuBlueprints = [
   { category: 'Sides', name: 'Garlic Bread', description: 'Toasted garlic bread with herb butter', price: 4.99, image: 'https://images.unsplash.com/photo-1619535860434-ba1d8fa12536?w=400', isVeg: true },
   { category: 'Starters', name: 'Veg Spring Rolls', description: 'Crispy rolls with a savory filling', price: 5.49, image: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=400', isVeg: true },
   { category: 'Pizza', name: 'Classic Margherita Pizza', description: 'Tomato, mozzarella, and basil on a crisp base', price: 12.99, image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400', isVeg: true },
-  { category: 'Pizza', name: 'Pepperoni Pizza', description: 'Loaded with pepperoni and melted cheese', price: 14.99, image: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400', isVeg: false },
-  { category: 'Pasta', name: 'Creamy Alfredo Pasta', description: 'Rich cream sauce with parmesan and herbs', price: 11.99, image: 'https://images.unsplash.com/photo-1521389508051-d7ffb5dc8f93?w=400', isVeg: true },
+  { category: 'Pizza', name: 'Pepperoni Pizza', description: 'Loaded with pepperoni and melted cheese', price: 14.99, image: 'https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=400', isVeg: false },
+  { category: 'Pasta', name: 'Creamy Alfredo Pasta', description: 'Rich cream sauce with parmesan and herbs', price: 11.99, image: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400', isVeg: true },
   { category: 'Pasta', name: 'Spicy Arrabbiata Pasta', description: 'Tomato-chili sauce with a sharp bite', price: 11.49, image: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400', isVeg: true },
   { category: 'Pasta', name: 'Pesto Penne Pasta', description: 'Herby basil pesto with roasted vegetables', price: 12.49, image: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=400', isVeg: true },
   { category: 'Burgers', name: 'Crispy Veg Burger', description: 'Golden patty with fresh lettuce and sauce', price: 8.99, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400', isVeg: true },
@@ -118,8 +118,8 @@ const menuBlueprints = [
   { category: 'Biryani', name: 'Hyderabadi Biryani', description: 'Aromatic layered biryani with spices', price: 13.99, image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400', isVeg: false },
   { category: 'Grill', name: 'Grilled Skewers', description: 'Chargrilled skewers with smoky seasoning', price: 10.99, image: 'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=400', isVeg: false },
   { category: 'Combos', name: 'Signature Combo Meal', description: 'Main, side, and drink bundled together', price: 14.99, image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400', isVeg: false },
-  { category: 'Breakfast', name: 'Waffle Stack', description: 'Golden waffles with syrup and berries', price: 7.99, image: 'https://images.unsplash.com/photo-1562376552-0d160a2f3b2b?w=400', isVeg: true },
-  { category: 'Desserts', name: 'Chocolate Brownie', description: 'Warm brownie with a fudgy center', price: 6.99, image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476e?w=400', isVeg: true },
+  { category: 'Breakfast', name: 'Waffle Stack', description: 'Golden waffles with syrup and berries', price: 7.99, image: 'https://images.unsplash.com/photo-1513442542250-854d436a73f2?w=400', isVeg: true },
+  { category: 'Desserts', name: 'Chocolate Brownie', description: 'Warm brownie with a fudgy center', price: 6.99, image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=400', isVeg: true },
   { category: 'Desserts', name: 'Cheesecake Slice', description: 'Smooth cheesecake with a buttery base', price: 6.49, image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=400', isVeg: true },
   { category: 'Desserts', name: 'Ice Cream Sundae', description: 'Scoops topped with sauce and nuts', price: 5.99, image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400', isVeg: true },
 ];
@@ -190,18 +190,61 @@ function getThemeKey(restaurant) {
   return 'cafe';
 }
 
+function getMenuItemImage(restaurant, item, index) {
+  const categoryImages = {
+    Beverages: [
+      'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=800',
+      'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800',
+    ],
+    Soups: ['https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800'],
+    Salads: ['https://images.unsplash.com/photo-1546793665-c74683f339c1?w=800'],
+    Sides: ['https://images.unsplash.com/photo-1619535860434-ba1d8fa12536?w=800'],
+    Starters: ['https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800'],
+    Pizza: [
+      'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800',
+      'https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=800',
+    ],
+    Pasta: [
+      'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800',
+      'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800',
+    ],
+    Burgers: [
+      'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800',
+      'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800',
+    ],
+    Wraps: ['https://images.unsplash.com/photo-1633321702518-7feccafb94d5?w=800'],
+    Mexican: ['https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800'],
+    Bowls: ['https://images.unsplash.com/photo-1547592180-85f173990554?w=800'],
+    Rice: ['https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800'],
+    Noodles: ['https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=800'],
+    Curry: ['https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=800'],
+    Biryani: ['https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800'],
+    Grill: ['https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800'],
+    Combos: ['https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800'],
+    Breakfast: ['https://images.unsplash.com/photo-1513442542250-854d436a73f2?w=800'],
+    Desserts: [
+      'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=800',
+      'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800',
+    ],
+  };
+
+  const fallback = 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800';
+  const options = categoryImages[item.category] || [item.image || fallback];
+  const pick = (Number(restaurant.id) + index) % options.length;
+  return options[pick] || fallback;
+}
+
 function buildMenuItemsForRestaurant(restaurant) {
-  const theme = restaurantThemeLabels[getThemeKey(restaurant)] || 'House';
   const priceBoost = restaurant.price_range === 3 ? 2 : restaurant.price_range === 2 ? 1 : 0;
 
   return menuBlueprints.map((item, index) => ({
     id: `m${restaurant.id}-${String(index + 1).padStart(2, '0')}`,
     restaurant_id: restaurant.id,
-    name: `${theme} ${item.name}`,
+    name: item.name,
     description: `${item.description} served fresh at ${restaurant.name}`,
     price: Number(((item.price + priceBoost) * 100).toFixed(2)),
     category: item.category,
-    image: item.image,
+    image: getMenuItemImage(restaurant, item, index),
     is_veg: item.isVeg,
     is_available: true,
   }));

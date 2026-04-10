@@ -15,6 +15,7 @@ const RestaurantDetail = () => {
   const [loading, setLoading] = useState(true);
   const restaurant = restaurants.find(r => r.id === id);
   const categories = [...new Set(menuItems.map(m => m.category))];
+const FALLBACK_FOOD_IMAGE = 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800';
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { addItem, items: cartItems, updateQuantity } = useCart();
   const { user } = useAuth();
@@ -70,7 +71,17 @@ const RestaurantDetail = () => {
             const qty = getCartQuantity(item.id);
             return (
               <div key={item.id} className="flex gap-4 rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
-                <img src={item.image} alt={item.name} className="h-24 w-24 flex-shrink-0 rounded-lg object-cover" />
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="h-24 w-24 flex-shrink-0 rounded-lg object-cover"
+                  onError={(event) => {
+                    const target = event.currentTarget;
+                    if (target.src !== FALLBACK_FOOD_IMAGE) {
+                      target.src = FALLBACK_FOOD_IMAGE;
+                    }
+                  }}
+                />
                 <div className="flex flex-1 flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-2">

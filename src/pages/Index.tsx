@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { ArrowRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MoodSelector from '@/components/MoodSelector';
@@ -10,6 +10,7 @@ import { Mood } from '@/data/types';
 
 const Index = () => {
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
+  const navigate = useNavigate();
   const { restaurants } = useApp();
   const { user, isAuthenticated } = useAuth();
 
@@ -20,6 +21,11 @@ const Index = () => {
   const filteredRestaurants = selectedMood
     ? restaurants.filter(r => r.cuisine.some(c => selectedMood.categories.includes(c)))
     : restaurants;
+
+  const handleMoodSelect = (mood: Mood) => {
+    setSelectedMood(mood);
+    navigate(`/mood-recommendations?mood=${encodeURIComponent(mood.label)}`);
+  };
 
   return (
     <div className="min-h-screen">
@@ -64,7 +70,7 @@ const Index = () => {
       </section>
 
       <div className="container">
-        <MoodSelector onSelect={setSelectedMood} selected={selectedMood} />
+        <MoodSelector onSelect={handleMoodSelect} selected={selectedMood} />
       </div>
 
       <section className="container pb-16">

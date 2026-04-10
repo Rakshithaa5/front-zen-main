@@ -3,7 +3,7 @@ import { Star, Clock, Leaf } from 'lucide-react';
 import { Restaurant } from '@/data/types';
 import { Badge } from '@/components/ui/badge';
 
-const priceLabel = (p: number) => '$'.repeat(p);
+const priceLabel = (p: number) => '₹'.repeat(p);
 
 const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => {
   return (
