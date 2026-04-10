@@ -18,6 +18,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
+const FALLBACK_FOOD_IMAGE = 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800';
+
 const OwnerDashboard = () => {
   const { restaurants, menuItems, addMenuItem, updateMenuItem, deleteMenuItem, toggleMenuItemAvailability } = useApp();
   const { user } = useAuth();
@@ -252,7 +254,17 @@ const OwnerDashboard = () => {
           ) : (
             items.map(item => (
               <div key={item.id} className={`flex items-center gap-3 rounded-xl border bg-card p-3 shadow-sm ${!item.isAvailable ? 'opacity-60' : ''}`}>
-                <img src={item.image} alt={item.name} className="h-12 w-12 rounded-lg object-cover" />
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="h-12 w-12 rounded-lg object-cover"
+                  onError={(event) => {
+                    const target = event.currentTarget;
+                    if (target.src !== FALLBACK_FOOD_IMAGE) {
+                      target.src = FALLBACK_FOOD_IMAGE;
+                    }
+                  }}
+                />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <h3 className="truncate text-sm font-semibold text-foreground">{item.name}</h3>
