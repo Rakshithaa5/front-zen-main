@@ -155,13 +155,13 @@ const OrderTracking = () => {
                       {item.menuItem.name} × {item.quantity}
                     </span>
                     <span className="font-medium text-foreground">
-                      ${(item.menuItem.price * item.quantity).toFixed(2)}
+                      ₹{(item.menuItem.price * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 ))}
                 <div className="border-t pt-3 mt-3 flex justify-between font-bold">
                   <span className="text-foreground">Total Paid</span>
-                  <span className="text-primary">${order.total.toFixed(2)}</span>
+                  <span className="text-primary">₹{order.total.toFixed(2)}</span>
                 </div>
               </div>
             </div>

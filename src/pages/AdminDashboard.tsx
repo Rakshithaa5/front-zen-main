@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Trash2, Plus, TrendingUp, ShoppingBag, Store, DollarSign } from 'lucide-react';
+import { Trash2, Plus, TrendingUp, ShoppingBag, Store, DollarSign, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useApp } from '@/context/AppContext';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { Restaurant } from '@/data/types';
 import {
   Dialog,
@@ -17,6 +18,7 @@ import {
 const AdminDashboard = () => {
   const { restaurants, deleteRestaurant, addRestaurant } = useApp();
   const { orders } = useCart();
+  const { user } = useAuth();
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
   const [newCuisine, setNewCuisine] = useState('');
@@ -49,12 +51,22 @@ const AdminDashboard = () => {
 
   return (
     <div className="container py-8">
-      <h1 className="mb-2 font-display text-3xl font-bold text-foreground">Admin Dashboard</h1>
-      <p className="mb-8 text-muted-foreground">Manage restaurants, view orders & analytics</p>
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+            <Shield className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="font-display text-3xl font-bold text-foreground">Admin Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Welcome back, {user?.name}</p>
+          </div>
+        </div>
+        <p className="text-muted-foreground">Manage restaurants, view orders & analytics</p>
+      </div>
 
       {/* Analytics Cards */}
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border bg-card p-5">
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
               <Store className="h-5 w-5 text-primary" />
@@ -65,7 +77,7 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
-        <div className="rounded-xl border bg-card p-5">
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
               <ShoppingBag className="h-5 w-5 text-success" />
@@ -76,7 +88,7 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
-        <div className="rounded-xl border bg-card p-5">
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10">
               <DollarSign className="h-5 w-5 text-warning" />
@@ -87,7 +99,7 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
-        <div className="rounded-xl border bg-card p-5">
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
               <TrendingUp className="h-5 w-5 text-accent" />
@@ -127,7 +139,7 @@ const AdminDashboard = () => {
         </div>
         <div className="space-y-3">
           {restaurants.map(r => (
-            <div key={r.id} className="flex items-center gap-4 rounded-xl border bg-card p-4">
+            <div key={r.id} className="flex items-center gap-4 rounded-xl border bg-card p-4 shadow-sm">
               <img src={r.image} alt={r.name} className="h-14 w-14 rounded-lg object-cover" />
               <div className="flex-1">
                 <h3 className="font-semibold text-foreground">{r.name}</h3>
@@ -159,7 +171,7 @@ const AdminDashboard = () => {
         ) : (
           <div className="space-y-3">
             {filteredOrders.map(order => (
-              <div key={order.id} className="rounded-xl border bg-card p-4">
+              <div key={order.id} className="rounded-xl border bg-card p-4 shadow-sm">
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="font-semibold text-foreground">{order.id}</span>

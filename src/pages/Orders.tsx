@@ -40,7 +40,7 @@ const Orders = () => {
                 </div>
                 <div className="text-right">
                   <Badge className={statusColors[order.status]}>{order.status.replace(/_/g, ' ')}</Badge>
-                  <p className="mt-1 font-semibold text-foreground">${order.total.toFixed(2)}</p>
+                  <p className="mt-1 font-semibold text-foreground">₹{order.total.toFixed(2)}</p>
                 </div>
               </div>
             </div>
