@@ -179,6 +179,33 @@ function inferCategory(itemName) {
 }
 
 function getCategoryImage(category, itemName, restaurantName, index) {
+  if (restaurantName === 'Sushi Harbor') {
+    const sushiImages = {
+      'Salmon Nigiri': 'https://images.unsplash.com/photo-1579584425555-c3fb46f1c6bf?w=800',
+      'Tuna Sashimi': 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800',
+      'California Roll': 'https://images.unsplash.com/photo-1553621042-f6e147245754?w=800',
+      'Dragon Roll': 'https://images.unsplash.com/photo-1607301405390-d831c242f59b?w=800',
+      'Spicy Tuna Maki': 'https://images.unsplash.com/photo-1625944525533-473f1bf3f1eb?w=800',
+      'Avocado Roll': 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800',
+      'Ebi Tempura Roll': 'https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=800',
+      'Rainbow Roll': 'https://images.unsplash.com/photo-1607301405390-d831c242f59b?w=800',
+      'Cucumber Maki': 'https://images.unsplash.com/photo-1553621042-f6e147245754?w=800',
+      'Salmon Roe Gunkan': 'https://images.unsplash.com/photo-1579584425555-c3fb46f1c6bf?w=800',
+      'Edamame': 'https://images.unsplash.com/photo-1626201758592-44a4b0f5c6a1?w=800',
+      'Miso Soup': 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800',
+      'Gyoza': 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800',
+      'Chicken Ramen': 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=800',
+      'Agedashi Tofu': 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800',
+      'Takoyaki': 'https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=800',
+      'Green Tea Ice Cream': 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=800',
+      'Matcha Latte': 'https://images.unsplash.com/photo-1517701550927-30cf4ba1c3e0?w=800',
+    };
+
+    if (sushiImages[itemName]) {
+      return sushiImages[itemName];
+    }
+  }
+
   const pools = {
     Desserts: [
       'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=800',

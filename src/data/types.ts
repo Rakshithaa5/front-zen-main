@@ -44,6 +44,8 @@ export interface Order {
   transactionId: string;
   createdAt: string;
   restaurantName: string;
+  restaurantId?: string;
+  deliveryAddress?: string;
 }
 
 export type OrderStatus = 'placed' | 'accepted' | 'preparing' | 'out_for_delivery' | 'delivered';

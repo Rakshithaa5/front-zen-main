@@ -161,6 +161,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         transactionId: backendOrder.transaction_id,
         createdAt: backendOrder.created_at,
         restaurantName: backendOrder.restaurant_name,
+        restaurantId: backendOrder.restaurant_id,
+        deliveryAddress,
       };
 
       setOrders(prev => [order, ...prev]);
@@ -176,12 +178,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateOrderStatus = async (orderId: string, status: OrderStatus) => {
+    // Update locally immediately for real-time tracking UI
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+    // Also sync to backend silently
     try {
-      const updatedOrder = await apiService.updateOrderStatus(orderId, status);
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: updatedOrder.status } : o));
-      toast.success('Order status updated');
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update order status');
+      await apiService.updateOrderStatus(orderId, status);
+    } catch {
+      // silent — local state already updated
     }
   };
 
