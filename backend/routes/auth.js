@@ -43,9 +43,24 @@ router.post('/login', async (req, res) => {
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
-  const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+  // If owner, fetch their restaurant_id
+  let restaurantId = null;
+  if (user.role === 'restaurant_owner') {
+    const { data: restaurant } = await supabase
+      .from('restaurants')
+      .select('id')
+      .eq('owner_id', user.id)
+      .single();
+    restaurantId = restaurant?.id || null;
+  }
+
+  const token = jwt.sign(
+    { id: user.id, email: user.email, role: user.role, restaurantId },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  );
   const { password_hash, ...safeUser } = user;
-  res.json({ user: safeUser, token });
+  res.json({ user: { ...safeUser, restaurantId }, token });
 });
 
 module.exports = router;

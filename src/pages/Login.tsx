@@ -106,7 +106,7 @@ const Login = () => {
 
         <div className="mt-4 text-center text-xs text-muted-foreground">
           <p>Test admin login:</p>
-          <p>admin@foodzen.com / admin123</p>
+          <p>admin@moodbyte.com / Admin@123</p>
         </div>
       </div>
     </div>

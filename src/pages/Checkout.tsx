@@ -286,7 +286,7 @@ const Checkout = () => {
                     {item.menuItem.name} × {item.quantity}
                   </span>
                   <span className="font-medium text-foreground">
-                    ${(item.menuItem.price * item.quantity).toFixed(2)}
+                    ₹{(item.menuItem.price * item.quantity).toFixed(2)}
                   </span>
                 </div>
               ))}
@@ -295,21 +295,21 @@ const Checkout = () => {
             <div className="space-y-2 border-b py-4 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span className="text-foreground">${subtotal.toFixed(2)}</span>
+                <span className="text-foreground">₹{subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Delivery Fee</span>
-                <span className="text-foreground">${deliveryFee.toFixed(2)}</span>
+                <span className="text-foreground">₹{deliveryFee.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Tax (5%)</span>
-                <span className="text-foreground">${tax.toFixed(2)}</span>
+                <span className="text-foreground">₹{tax.toFixed(2)}</span>
               </div>
             </div>
 
             <div className="flex justify-between pt-4 text-lg font-bold">
               <span className="text-foreground">Total</span>
-              <span className="text-primary">${total.toFixed(2)}</span>
+              <span className="text-primary">₹{total.toFixed(2)}</span>
             </div>
 
             <Button
@@ -318,7 +318,7 @@ const Checkout = () => {
               onClick={handlePlace}
               disabled={processing}
             >
-              {processing ? 'Processing Payment...' : `Place Order • $${total.toFixed(2)}`}
+              {processing ? 'Processing Payment...' : `Place Order • ₹${total.toFixed(2)}`}
             </Button>
 
             <p className="mt-3 text-center text-xs text-muted-foreground">

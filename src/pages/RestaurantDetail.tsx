@@ -76,7 +76,7 @@ const RestaurantDetail = () => {
                     <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{item.description}</p>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className="font-semibold text-foreground">${item.price.toFixed(2)}</span>
+                    <span className="font-semibold text-foreground">₹{item.price.toFixed(2)}</span>
                     {qty === 0 ? (
                       <Button size="sm" onClick={() => addItem(item, restaurant.id, restaurant.name)} className="gap-1 bg-primary text-primary-foreground hover:bg-primary/90">
                         <Plus className="h-3.5 w-3.5" /> Add
