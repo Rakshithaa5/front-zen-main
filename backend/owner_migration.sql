@@ -5,6 +5,32 @@
 ALTER TABLE restaurants
 ADD COLUMN IF NOT EXISTS owner_id uuid;
 
+ALTER TABLE restaurants
+ADD COLUMN IF NOT EXISTS gallery_images text[] NOT NULL DEFAULT '{}';
+
+ALTER TABLE restaurants
+ADD COLUMN IF NOT EXISTS location text;
+
+ALTER TABLE restaurants
+ADD COLUMN IF NOT EXISTS verification_doc text;
+
+ALTER TABLE restaurants
+ADD COLUMN IF NOT EXISTS is_verified boolean NOT NULL DEFAULT false;
+
+ALTER TABLE restaurants
+ADD COLUMN IF NOT EXISTS verified_at timestamptz;
+
+UPDATE restaurants
+SET location = COALESCE(location, address)
+WHERE location IS NULL;
+
+-- Existing platform restaurants should be treated as already approved.
+UPDATE restaurants
+SET verification_doc = COALESCE(NULLIF(verification_doc, ''), 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'),
+    is_verified = true,
+    verified_at = COALESCE(verified_at, now())
+WHERE id IS NOT NULL;
+
 -- 2) Ensure foreign key exists.
 DO $$
 BEGIN

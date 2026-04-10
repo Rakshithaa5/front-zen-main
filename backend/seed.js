@@ -85,6 +85,9 @@ const restaurantsWithOwners = restaurants.map(restaurant => {
   return {
     ...restaurant,
     owner_id: owner?.id || null,
+    verification_doc: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    is_verified: true,
+    verified_at: new Date().toISOString(),
   };
 });
 

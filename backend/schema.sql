@@ -23,10 +23,15 @@ CREATE TABLE restaurants (
   rating numeric(2,1) DEFAULT 0,
   price_range int CHECK (price_range IN (1, 2, 3)),
   image text,
+  gallery_images text[] NOT NULL DEFAULT '{}',
   delivery_time text,
   is_veg boolean DEFAULT false,
   address text,
+  location text,
   description text,
+  verification_doc text,
+  is_verified boolean NOT NULL DEFAULT false,
+  verified_at timestamptz,
   owner_id uuid UNIQUE REFERENCES users(id) ON DELETE SET NULL,
   created_at timestamptz DEFAULT now()
 );

@@ -11,10 +11,15 @@ interface BackendRestaurant {
   rating: number;
   price_range: 1 | 2 | 3;
   image: string;
+  gallery_images?: string[];
   delivery_time: string;
   is_veg: boolean;
   address: string;
+  location?: string;
   description: string;
+  verification_doc?: string;
+  is_verified?: boolean;
+  verified_at?: string | null;
 }
 
 interface BackendMenuItem {
@@ -33,9 +38,9 @@ interface AppContextType {
   restaurants: Restaurant[];
   menuItems: MenuItem[];
   loading: boolean;
-  addRestaurant: (restaurant: Restaurant) => void;
-  deleteRestaurant: (id: string) => void;
-  updateRestaurant: (restaurant: Restaurant) => void;
+  addRestaurant: (restaurant: Restaurant) => Promise<void>;
+  deleteRestaurant: (id: string) => Promise<void>;
+  updateRestaurant: (restaurant: Restaurant) => Promise<void>;
   addMenuItem: (item: MenuItem) => Promise<void>;
   updateMenuItem: (item: MenuItem) => Promise<void>;
   deleteMenuItem: (id: string) => Promise<void>;
@@ -64,23 +69,30 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     isAvailable: item.is_available,
   });
 
+  const mapRestaurant = (r: BackendRestaurant): Restaurant => ({
+    id: r.id,
+    name: r.name,
+    cuisine: r.cuisine,
+    rating: r.rating,
+    priceRange: r.price_range,
+    image: r.image,
+    imageGallery: r.gallery_images || [],
+    deliveryTime: r.delivery_time || '25-35 min',
+    isVeg: r.is_veg,
+    address: r.address || r.location || 'New Location',
+    location: r.location || r.address || 'New Location',
+    description: r.description || `Welcome to ${r.name}`,
+    verificationDoc: r.verification_doc || '',
+    isVerified: Boolean(r.is_verified),
+    verifiedAt: r.verified_at || null,
+  });
+
   const fetchRestaurants = useCallback(async () => {
     try {
       setLoading(true);
       const data = await apiService.getRestaurants();
       // Transform backend data to frontend format
-      const transformedData = data.map((r: BackendRestaurant) => ({
-        id: r.id,
-        name: r.name,
-        cuisine: r.cuisine,
-        rating: r.rating,
-        priceRange: r.price_range,
-        image: r.image,
-        deliveryTime: r.delivery_time,
-        isVeg: r.is_veg,
-        address: r.address,
-        description: r.description,
-      }));
+      const transformedData = data.map((r: BackendRestaurant) => mapRestaurant(r));
       if (user?.role === 'restaurant_owner') {
         setRestaurants(user.restaurantId
           ? transformedData.filter((restaurant) => restaurant.id === user.restaurantId)
@@ -144,20 +156,74 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [authLoading, fetchMenuItems, user?.restaurantId, user?.role]);
 
-  const addRestaurant = (restaurant: Restaurant) => {
-    setRestaurants(prev => [...prev, restaurant]);
-    toast.success(`${restaurant.name} added successfully`);
+  const addRestaurant = async (restaurant: Restaurant) => {
+    try {
+      const created = await apiService.createRestaurant({
+        id: restaurant.id,
+        name: restaurant.name,
+        cuisine: restaurant.cuisine,
+        rating: restaurant.rating,
+        price_range: restaurant.priceRange,
+        image: restaurant.image,
+        gallery_images: restaurant.imageGallery,
+        delivery_time: restaurant.deliveryTime,
+        is_veg: restaurant.isVeg,
+        address: restaurant.address,
+        location: restaurant.location,
+        description: restaurant.description,
+        verification_doc: restaurant.verificationDoc,
+        is_verified: restaurant.isVerified,
+        verified_at: restaurant.verifiedAt || null,
+      }) as BackendRestaurant;
+
+      const transformed = mapRestaurant(created);
+      setRestaurants(prev => [...prev, transformed]);
+      toast.success(`${transformed.name} added successfully`);
+    } catch (error) {
+      toast.error('Failed to add restaurant');
+      console.error('Error adding restaurant:', error);
+    }
   };
 
-  const deleteRestaurant = (id: string) => {
-    const r = restaurants.find(r => r.id === id);
-    setRestaurants(prev => prev.filter(r => r.id !== id));
-    setMenuItems(prev => prev.filter(m => m.restaurantId !== id));
-    toast.success(`${r?.name || 'Restaurant'} deleted`);
+  const deleteRestaurant = async (id: string) => {
+    const r = restaurants.find(restaurant => restaurant.id === id);
+    try {
+      await apiService.deleteRestaurant(id);
+      setRestaurants(prev => prev.filter(restaurant => restaurant.id !== id));
+      setMenuItems(prev => prev.filter(m => m.restaurantId !== id));
+      toast.success(`${r?.name || 'Restaurant'} deleted`);
+    } catch (error) {
+      toast.error('Failed to delete restaurant');
+      console.error('Error deleting restaurant:', error);
+    }
   };
 
-  const updateRestaurant = (restaurant: Restaurant) => {
-    setRestaurants(prev => prev.map(r => r.id === restaurant.id ? restaurant : r));
+  const updateRestaurant = async (restaurant: Restaurant) => {
+    try {
+      const updated = await apiService.updateRestaurant(restaurant.id, {
+        name: restaurant.name,
+        cuisine: restaurant.cuisine,
+        rating: restaurant.rating,
+        price_range: restaurant.priceRange,
+        image: restaurant.image,
+        gallery_images: restaurant.imageGallery,
+        delivery_time: restaurant.deliveryTime,
+        is_veg: restaurant.isVeg,
+        address: restaurant.address,
+        location: restaurant.location,
+        description: restaurant.description,
+        verification_doc: restaurant.verificationDoc,
+        is_verified: restaurant.isVerified,
+        verified_at: restaurant.verifiedAt || null,
+      }) as BackendRestaurant;
+
+      const transformed = mapRestaurant(updated);
+      setRestaurants(prev => prev.map(r => r.id === transformed.id ? transformed : r));
+      toast.success(`${transformed.name} updated`);
+    } catch (error) {
+      toast.error('Failed to update restaurant');
+      console.error('Error updating restaurant:', error);
+    }
   };
 
   const addMenuItem = async (item: MenuItem) => {
