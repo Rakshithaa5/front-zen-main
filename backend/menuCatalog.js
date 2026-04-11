@@ -179,6 +179,19 @@ function inferCategory(itemName) {
 }
 
 function getCategoryImage(category, itemName, restaurantName, index) {
+  if (restaurantName === 'Curry Leaf') {
+    const curryLeafImages = {
+      'Rava Idli': 'https://source.unsplash.com/800x600/?rava,idli,south-indian,food',
+      'Medu Vada': 'https://source.unsplash.com/800x600/?medu,vada,south-indian,food',
+      Uttapam: 'https://source.unsplash.com/800x600/?uttapam,south-indian,food',
+      'Appam with Stew': 'https://source.unsplash.com/800x600/?appam,vegetable,stew,kerala,food',
+    };
+
+    if (curryLeafImages[itemName]) {
+      return curryLeafImages[itemName];
+    }
+  }
+
   if (restaurantName === 'Grain & Greens') {
     const grainImages = {
       'Quinoa Buddha Bowl': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800',
