@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,6 +17,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.ENABLE_PAGES_DEPLOY == 'true' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
