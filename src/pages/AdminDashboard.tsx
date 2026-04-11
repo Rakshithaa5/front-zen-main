@@ -1,5 +1,5 @@
 import { ChangeEvent, useMemo, useRef, useState } from 'react';
-import { Trash2, Plus, TrendingUp, ShoppingBag, Store, IndianRupee, Shield, FileCheck2, CheckCircle2, XCircle, Loader2, FileBadge2, Pencil } from 'lucide-react';
+import { Trash2, Plus, TrendingUp, ShoppingBag, Store, IndianRupee, Shield, FileCheck2, CheckCircle2, XCircle, Loader2, Pencil, KeyRound, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -10,15 +10,23 @@ import { useAuth } from '@/context/AuthContext';
 import { Restaurant } from '@/data/types';
 import { toast } from 'sonner';
 import apiService from '@/services/api';
-import { Bar, BarChart, CartesianGrid, Cell, LabelList, Line, LineChart, Pie, PieChart, XAxis, YAxis } from 'recharts';
-import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+
+interface OwnerCredentials {
+  name: string;
+  email: string;
+  password: string;
+}
 
 const AdminDashboard = () => {
   const { restaurants, deleteRestaurant, addRestaurant, updateRestaurant } = useApp();
@@ -27,51 +35,43 @@ const AdminDashboard = () => {
   const [showAdd, setShowAdd] = useState(false);
   const [newRestaurant, setNewRestaurant] = useState({
     name: '',
+    ownerName: '',
     cuisine: '',
     location: '',
     description: '',
     image: '',
     imageGallery: '',
-    verificationDoc: '',
   });
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [restaurantSearch, setRestaurantSearch] = useState('');
+  const [selectedCuisine, setSelectedCuisine] = useState('all');
+  const [verificationFilter, setVerificationFilter] = useState<'all' | 'verified' | 'pending'>('all');
   const [savingRestaurant, setSavingRestaurant] = useState(false);
+  const [createdOwnerCredentials, setCreatedOwnerCredentials] = useState<OwnerCredentials | null>(null);
+  const [showOwnerCredentials, setShowOwnerCredentials] = useState(false);
   const [isUploadingCoverImage, setIsUploadingCoverImage] = useState(false);
   const [isUploadingGalleryImage, setIsUploadingGalleryImage] = useState(false);
-  const [isUploadingVerificationDoc, setIsUploadingVerificationDoc] = useState(false);
   const coverImageInputRef = useRef<HTMLInputElement | null>(null);
   const galleryImageInputRef = useRef<HTMLInputElement | null>(null);
-  const verificationDocInputRef = useRef<HTMLInputElement | null>(null);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
   const [editRestaurant, setEditRestaurant] = useState({
     name: '',
+    ownerName: '',
     cuisine: '',
     location: '',
     description: '',
     image: '',
     imageGallery: '',
-    verificationDoc: '',
   });
   const [savingEditRestaurant, setSavingEditRestaurant] = useState(false);
   const [isUploadingEditCoverImage, setIsUploadingEditCoverImage] = useState(false);
   const [isUploadingEditGalleryImage, setIsUploadingEditGalleryImage] = useState(false);
-  const [isUploadingEditVerificationDoc, setIsUploadingEditVerificationDoc] = useState(false);
   const editCoverImageInputRef = useRef<HTMLInputElement | null>(null);
   const editGalleryImageInputRef = useRef<HTMLInputElement | null>(null);
-  const editVerificationDocInputRef = useRef<HTMLInputElement | null>(null);
 
   const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
   const filteredOrders = filterStatus === 'all' ? orders : orders.filter(o => o.status === filterStatus);
   const verifiedCount = restaurants.filter(r => r.isVerified).length;
-  const pendingVerificationCount = restaurants.length - verifiedCount;
-
-  const orderStatusData = useMemo(() => {
-    const statuses = ['placed', 'accepted', 'preparing', 'out_for_delivery', 'delivered'] as const;
-    return statuses.map((status) => ({
-      status: status.replace(/_/g, ' '),
-      count: orders.filter(order => order.status === status).length,
-    }));
-  }, [orders]);
 
   const revenueTrendData = useMemo(() => {
     const grouped = new Map<string, number>();
@@ -99,18 +99,50 @@ const AdminDashboard = () => {
       .slice(0, 6);
   }, [orders]);
 
-  const verificationData = useMemo(() => {
-    return [
-      { name: 'Verified', value: verifiedCount, fill: 'var(--color-verified)' },
-      { name: 'Pending', value: pendingVerificationCount, fill: 'var(--color-pending)' },
-    ].filter(entry => entry.value > 0);
-  }, [pendingVerificationCount, verifiedCount]);
+  const restaurantCuisines = useMemo(() => {
+    return ['all', ...new Set(restaurants.flatMap((restaurant) => restaurant.cuisine))];
+  }, [restaurants]);
+
+  const filteredRestaurants = useMemo(() => {
+    return restaurants.filter((restaurant) => {
+      const matchesSearch =
+        !restaurantSearch.trim()
+        || restaurant.name.toLowerCase().includes(restaurantSearch.toLowerCase())
+        || (restaurant.ownerName || '').toLowerCase().includes(restaurantSearch.toLowerCase())
+        || restaurant.id.toLowerCase().includes(restaurantSearch.toLowerCase());
+
+      const matchesCuisine = selectedCuisine === 'all' || restaurant.cuisine.includes(selectedCuisine);
+
+      const matchesVerification =
+        verificationFilter === 'all'
+        || (verificationFilter === 'verified' && restaurant.isVerified)
+        || (verificationFilter === 'pending' && !restaurant.isVerified);
+
+      return matchesSearch && matchesCuisine && matchesVerification;
+    });
+  }, [restaurants, restaurantSearch, selectedCuisine, verificationFilter]);
+
+  const groupedOrders = useMemo(() => {
+    const groups = filteredOrders.reduce<Record<string, typeof filteredOrders>>((acc, order) => {
+      const key = order.restaurantName || 'Unknown Restaurant';
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(order);
+      return acc;
+    }, {});
+
+    return Object.entries(groups)
+      .map(([restaurantName, restaurantOrders]) => ({
+        restaurantName,
+        orders: restaurantOrders,
+        totalRevenue: restaurantOrders.reduce((sum, order) => sum + order.total, 0),
+      }))
+      .sort((a, b) => b.totalRevenue - a.totalRevenue);
+  }, [filteredOrders]);
 
   const chartConfig = {
-    orders: { label: 'Orders', color: 'hsl(var(--primary))' },
     revenue: { label: 'Revenue', color: 'hsl(var(--warning))' },
-    verified: { label: 'Verified', color: 'hsl(var(--success))' },
-    pending: { label: 'Pending', color: 'hsl(var(--destructive))' },
   };
 
   const parseList = (value: string) => value.split(',').map(v => v.trim()).filter(Boolean);
@@ -152,33 +184,16 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleVerificationDocFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setIsUploadingVerificationDoc(true);
-      const { assetUrl } = await apiService.uploadRestaurantAsset(file, 'document');
-      setNewRestaurant(prev => ({ ...prev, verificationDoc: assetUrl }));
-      toast.success('Verification document attached');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Document upload failed');
-    } finally {
-      setIsUploadingVerificationDoc(false);
-      event.target.value = '';
-    }
-  };
-
   const openEditRestaurant = (restaurant: Restaurant) => {
     setEditingRestaurant(restaurant);
     setEditRestaurant({
       name: restaurant.name,
+      ownerName: restaurant.ownerName || '',
       cuisine: restaurant.cuisine.join(', '),
       location: restaurant.location || restaurant.address,
       description: restaurant.description,
       image: restaurant.image,
       imageGallery: (restaurant.imageGallery || []).join(', '),
-      verificationDoc: restaurant.verificationDoc || '',
     });
   };
 
@@ -219,28 +234,11 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleEditVerificationDocFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setIsUploadingEditVerificationDoc(true);
-      const { assetUrl } = await apiService.uploadRestaurantAsset(file, 'document');
-      setEditRestaurant(prev => ({ ...prev, verificationDoc: assetUrl }));
-      toast.success('Verification document attached');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Document upload failed');
-    } finally {
-      setIsUploadingEditVerificationDoc(false);
-      event.target.value = '';
-    }
-  };
-
   const handleSaveEditedRestaurant = async () => {
     if (!editingRestaurant) return;
 
-    if (!editRestaurant.name.trim() || !editRestaurant.cuisine.trim() || !editRestaurant.location.trim()) {
-      toast.error('Name, cuisine and location are required');
+    if (!editRestaurant.name.trim() || !editRestaurant.ownerName.trim() || !editRestaurant.cuisine.trim() || !editRestaurant.location.trim()) {
+      toast.error('Restaurant name, owner name, cuisine and location are required');
       return;
     }
 
@@ -248,21 +246,21 @@ const AdminDashboard = () => {
     await updateRestaurant({
       ...editingRestaurant,
       name: editRestaurant.name.trim(),
+      ownerName: editRestaurant.ownerName.trim(),
       cuisine: parseList(editRestaurant.cuisine),
       image: editRestaurant.image.trim() || editingRestaurant.image,
       imageGallery: parseList(editRestaurant.imageGallery),
       address: editRestaurant.location.trim(),
       location: editRestaurant.location.trim(),
       description: editRestaurant.description.trim() || `Welcome to ${editRestaurant.name.trim()}`,
-      verificationDoc: editRestaurant.verificationDoc.trim(),
     });
     setSavingEditRestaurant(false);
     setEditingRestaurant(null);
   };
 
   const handleAddRestaurant = async () => {
-    if (!newRestaurant.name.trim() || !newRestaurant.cuisine.trim() || !newRestaurant.location.trim()) {
-      toast.error('Name, cuisine and location are required');
+    if (!newRestaurant.name.trim() || !newRestaurant.ownerName.trim() || !newRestaurant.cuisine.trim() || !newRestaurant.location.trim()) {
+      toast.error('Restaurant name, owner name, cuisine and location are required');
       return;
     }
 
@@ -270,6 +268,7 @@ const AdminDashboard = () => {
     const restaurant: Restaurant = {
       id: `r-${Date.now()}`,
       name: newRestaurant.name.trim(),
+      ownerName: newRestaurant.ownerName.trim(),
       cuisine: parseList(newRestaurant.cuisine),
       rating: 4.0,
       priceRange: 2,
@@ -280,23 +279,43 @@ const AdminDashboard = () => {
       address: newRestaurant.location.trim(),
       location: newRestaurant.location.trim(),
       description: newRestaurant.description.trim() || `Welcome to ${newRestaurant.name.trim()}`,
-      verificationDoc: newRestaurant.verificationDoc.trim(),
+      verificationDoc: '',
       isVerified: false,
       verifiedAt: null,
     };
 
-    await addRestaurant(restaurant);
+    const ownerCredentials = await addRestaurant(restaurant, newRestaurant.ownerName.trim());
     setNewRestaurant({
       name: '',
+      ownerName: '',
       cuisine: '',
       location: '',
       description: '',
       image: '',
       imageGallery: '',
-      verificationDoc: '',
     });
     setShowAdd(false);
     setSavingRestaurant(false);
+
+    if (ownerCredentials) {
+      setCreatedOwnerCredentials(ownerCredentials);
+      setShowOwnerCredentials(true);
+      toast.success('Owner account created in Supabase', {
+        description: `Credentials ready for ${ownerCredentials.email}`,
+      });
+    }
+  };
+
+  const copyOwnerCredentials = async () => {
+    if (!createdOwnerCredentials) return;
+
+    try {
+      const text = `Name: ${createdOwnerCredentials.name}\nEmail: ${createdOwnerCredentials.email}\nPassword: ${createdOwnerCredentials.password}`;
+      await navigator.clipboard.writeText(text);
+      toast.success('Owner credentials copied');
+    } catch {
+      toast.error('Failed to copy credentials');
+    }
   };
 
   const toggleVerification = async (restaurant: Restaurant) => {
@@ -305,6 +324,24 @@ const AdminDashboard = () => {
       isVerified: !restaurant.isVerified,
       verifiedAt: restaurant.isVerified ? null : new Date().toISOString(),
     });
+  };
+
+  const handleResetOwnerPassword = async (restaurant: Restaurant) => {
+    try {
+      const response = await apiService.resetOwnerPassword(restaurant.id);
+      const credentials = response.ownerCredentials as OwnerCredentials | undefined;
+
+      if (!credentials) {
+        toast.error('No owner credentials returned');
+        return;
+      }
+
+      setCreatedOwnerCredentials(credentials);
+      setShowOwnerCredentials(true);
+      toast.success('Owner password reset successfully');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to reset owner password');
+    }
   };
 
   return (
@@ -322,7 +359,33 @@ const AdminDashboard = () => {
         <p className="text-muted-foreground">Manage restaurants, view orders & analytics</p>
       </div>
 
-      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <Dialog open={showOwnerCredentials} onOpenChange={setShowOwnerCredentials}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Owner Credentials Created</DialogTitle>
+            <DialogDescription>
+              Share these credentials with the restaurant owner. They can log in immediately.
+            </DialogDescription>
+          </DialogHeader>
+          {createdOwnerCredentials && (
+            <div className="space-y-2 rounded-lg border bg-muted/30 p-3 text-sm">
+              <p><span className="font-semibold">Name:</span> {createdOwnerCredentials.name}</p>
+              <p><span className="font-semibold">Email:</span> {createdOwnerCredentials.email}</p>
+              <p><span className="font-semibold">Password:</span> {createdOwnerCredentials.password}</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setShowOwnerCredentials(false)}>
+              Close
+            </Button>
+            <Button type="button" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => void copyOwnerCredentials()}>
+              Copy Credentials
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <div className="rounded-xl border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
@@ -383,24 +446,6 @@ const AdminDashboard = () => {
       <div className="mb-8 grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border bg-card p-5 shadow-sm">
           <div className="mb-4">
-            <h2 className="font-display text-xl font-bold text-foreground">Orders by Status</h2>
-            <p className="text-sm text-muted-foreground">Current order pipeline across the platform</p>
-          </div>
-          <ChartContainer config={chartConfig} className="h-[260px] w-full">
-            <BarChart data={orderStatusData}>
-              <CartesianGrid vertical={false} strokeDasharray="3 3" />
-              <XAxis dataKey="status" tickLine={false} axisLine={false} tickMargin={8} />
-              <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
-              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-              <Bar dataKey="count" fill="var(--color-orders)" radius={8}>
-                <LabelList dataKey="count" position="top" />
-              </Bar>
-            </BarChart>
-          </ChartContainer>
-        </div>
-
-        <div className="rounded-xl border bg-card p-5 shadow-sm">
-          <div className="mb-4">
             <h2 className="font-display text-xl font-bold text-foreground">Revenue Trend</h2>
             <p className="text-sm text-muted-foreground">Daily revenue progression for all restaurants</p>
           </div>
@@ -430,24 +475,6 @@ const AdminDashboard = () => {
             </BarChart>
           </ChartContainer>
         </div>
-
-        <div className="rounded-xl border bg-card p-5 shadow-sm">
-          <div className="mb-4">
-            <h2 className="font-display text-xl font-bold text-foreground">Verification Queue</h2>
-            <p className="text-sm text-muted-foreground">Verified vs pending restaurants</p>
-          </div>
-          <ChartContainer config={chartConfig} className="h-[260px] w-full">
-            <PieChart>
-              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-              <Pie data={verificationData} dataKey="value" nameKey="name" innerRadius={70} outerRadius={105} paddingAngle={4}>
-                {verificationData.map((entry) => (
-                  <Cell key={entry.name} fill={entry.fill} />
-                ))}
-              </Pie>
-              <ChartLegend content={<ChartLegendContent />} />
-            </PieChart>
-          </ChartContainer>
-        </div>
       </div>
 
       <div className="mb-8">
@@ -465,6 +492,7 @@ const AdminDashboard = () => {
               </DialogHeader>
               <div className="space-y-4 pt-4">
                 <Input placeholder="Restaurant Name" value={newRestaurant.name} onChange={e => setNewRestaurant(prev => ({ ...prev, name: e.target.value }))} />
+                <Input placeholder="Restaurant Owner Name" value={newRestaurant.ownerName} onChange={e => setNewRestaurant(prev => ({ ...prev, ownerName: e.target.value }))} />
                 <Input placeholder="Cuisines (comma-separated)" value={newRestaurant.cuisine} onChange={e => setNewRestaurant(prev => ({ ...prev, cuisine: e.target.value }))} />
                 <Input placeholder="Location" value={newRestaurant.location} onChange={e => setNewRestaurant(prev => ({ ...prev, location: e.target.value }))} />
                 <Textarea placeholder="Description" value={newRestaurant.description} onChange={e => setNewRestaurant(prev => ({ ...prev, description: e.target.value }))} />
@@ -492,18 +520,6 @@ const AdminDashboard = () => {
                   {isUploadingGalleryImage ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   Attach Gallery Image File
                 </Button>
-                <Input placeholder="Verification document URL" value={newRestaurant.verificationDoc} onChange={e => setNewRestaurant(prev => ({ ...prev, verificationDoc: e.target.value }))} />
-                <input
-                  ref={verificationDocInputRef}
-                  type="file"
-                  accept="application/pdf,.doc,.docx"
-                  className="hidden"
-                  onChange={(e) => void handleVerificationDocFileChange(e)}
-                />
-                <Button type="button" variant="outline" onClick={() => verificationDocInputRef.current?.click()} disabled={isUploadingVerificationDoc}>
-                  {isUploadingVerificationDoc ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  Attach Verification Document File
-                </Button>
                 <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => void handleAddRestaurant()} disabled={savingRestaurant}>
                   Add Restaurant
                 </Button>
@@ -511,51 +527,101 @@ const AdminDashboard = () => {
             </DialogContent>
           </Dialog>
         </div>
+
+        <div className="mb-4 space-y-3 rounded-xl border bg-card p-4 shadow-sm">
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="relative md:col-span-2">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                placeholder="Search by restaurant name, owner name, or ID"
+                value={restaurantSearch}
+                onChange={(e) => setRestaurantSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {(['all', 'verified', 'pending'] as const).map((value) => (
+                <Badge
+                  key={value}
+                  variant={verificationFilter === value ? 'default' : 'outline'}
+                  className="cursor-pointer"
+                  onClick={() => setVerificationFilter(value)}
+                >
+                  {value === 'all' ? 'All Status' : value.charAt(0).toUpperCase() + value.slice(1)}
+                </Badge>
+              ))}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setRestaurantSearch('');
+                    setSelectedCuisine('all');
+                    setVerificationFilter('all');
+                  }}
+                >
+                  Clear Filters
+                </Button>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {restaurantCuisines.map((cuisine) => (
+              <Badge
+                key={cuisine}
+                variant={selectedCuisine === cuisine ? 'default' : 'outline'}
+                className="cursor-pointer"
+                onClick={() => setSelectedCuisine(cuisine)}
+              >
+                {cuisine === 'all' ? 'All Cuisines' : cuisine}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
         <div className="space-y-3">
-          {restaurants.map(r => (
-            <div key={r.id} className="flex items-start gap-4 rounded-xl border bg-card p-4 shadow-sm">
-              <img src={r.image} alt={r.name} className="h-14 w-14 rounded-lg object-cover" />
-              <div className="flex-1">
-                <div className="mb-1 flex flex-wrap items-center gap-2">
-                  <h3 className="font-semibold text-foreground">{r.name}</h3>
-                  {r.isVerified ? (
-                    <Badge className="gap-1 bg-success/10 text-success"><CheckCircle2 className="h-3.5 w-3.5" /> Verified</Badge>
-                  ) : (
-                    <Badge className="gap-1 bg-warning/10 text-warning"><XCircle className="h-3.5 w-3.5" /> Pending</Badge>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">{r.cuisine.join(' • ')}</p>
-                <p className="text-xs text-muted-foreground">Location: {r.location || r.address}</p>
-                <p className="line-clamp-2 text-xs text-muted-foreground">{r.description}</p>
-                <div className="mt-1 flex flex-wrap items-center gap-2">
-                  {r.verificationDoc ? (
-                    <>
-                      <Badge variant="outline" className="gap-1 border-success/30 text-success">
-                        <FileBadge2 className="h-3.5 w-3.5" /> Approved License
-                      </Badge>
-                      <a href={r.verificationDoc} target="_blank" rel="noreferrer" className="text-xs font-medium text-primary hover:underline">
-                        Open License PDF
-                      </a>
-                    </>
-                  ) : (
-                    <Badge variant="outline" className="gap-1 border-warning/30 text-warning">
-                      <XCircle className="h-3.5 w-3.5" /> License Missing
-                    </Badge>
-                  )}
+          {filteredRestaurants.length === 0 ? (
+            <p className="py-8 text-center text-muted-foreground">No restaurants found for selected filters.</p>
+          ) : (
+            filteredRestaurants.map(r => (
+              <div key={r.id} className="rounded-xl border bg-card p-4 shadow-sm">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="flex items-start gap-4">
+                    <img src={r.image} alt={r.name} className="h-16 w-16 rounded-lg object-cover" />
+                    <div>
+                      <div className="mb-1 flex flex-wrap items-center gap-2">
+                        <h3 className="font-semibold text-foreground">{r.name}</h3>
+                        {r.isVerified ? (
+                          <Badge className="gap-1 bg-success/10 text-success"><CheckCircle2 className="h-3.5 w-3.5" /> Verified</Badge>
+                        ) : (
+                          <Badge className="gap-1 bg-warning/10 text-warning"><XCircle className="h-3.5 w-3.5" /> Pending</Badge>
+                        )}
+                        <Badge variant="outline">{r.id}</Badge>
+                        <Badge className="bg-success/10 text-success">{r.rating} ★</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Owner: {r.ownerName || 'Not set'}</p>
+                      <p className="text-sm text-muted-foreground">{r.cuisine.join(' • ')}</p>
+                      <p className="text-sm text-muted-foreground">Location: {r.location || r.address}</p>
+                      <p className="line-clamp-2 text-sm text-muted-foreground">{r.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 lg:justify-end">
+                    <Button size="sm" variant="outline" className="gap-1" onClick={() => void toggleVerification(r)}>
+                      <FileCheck2 className="h-4 w-4" /> {r.isVerified ? 'Unverify' : 'Approve'}
+                    </Button>
+                    <Button size="sm" variant="outline" className="gap-1" onClick={() => void handleResetOwnerPassword(r)}>
+                      <KeyRound className="h-4 w-4" /> Reset Owner Password
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => openEditRestaurant(r)} title="Edit restaurant">
+                      <Pencil className="h-4 w-4 text-primary" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => void deleteRestaurant(r.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
               </div>
-              <Badge className="bg-success/10 text-success">{r.rating} ★</Badge>
-              <Button size="sm" variant="outline" className="gap-1" onClick={() => void toggleVerification(r)}>
-                <FileCheck2 className="h-4 w-4" /> {r.isVerified ? 'Unverify' : 'Verify'}
-              </Button>
-              <Button size="icon" variant="ghost" onClick={() => openEditRestaurant(r)} title="Edit restaurant">
-                <Pencil className="h-4 w-4 text-primary" />
-              </Button>
-              <Button size="icon" variant="ghost" onClick={() => void deleteRestaurant(r.id)}>
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         <Dialog open={!!editingRestaurant} onOpenChange={(open) => { if (!open) setEditingRestaurant(null); }}>
@@ -565,6 +631,7 @@ const AdminDashboard = () => {
             </DialogHeader>
             <div className="space-y-4 pt-4">
               <Input placeholder="Restaurant Name" value={editRestaurant.name} onChange={e => setEditRestaurant(prev => ({ ...prev, name: e.target.value }))} />
+              <Input placeholder="Restaurant Owner Name" value={editRestaurant.ownerName} onChange={e => setEditRestaurant(prev => ({ ...prev, ownerName: e.target.value }))} />
               <Input placeholder="Cuisines (comma-separated)" value={editRestaurant.cuisine} onChange={e => setEditRestaurant(prev => ({ ...prev, cuisine: e.target.value }))} />
               <Input placeholder="Location" value={editRestaurant.location} onChange={e => setEditRestaurant(prev => ({ ...prev, location: e.target.value }))} />
               <Textarea placeholder="Description" value={editRestaurant.description} onChange={e => setEditRestaurant(prev => ({ ...prev, description: e.target.value }))} />
@@ -592,18 +659,6 @@ const AdminDashboard = () => {
                 {isUploadingEditGalleryImage ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Attach Gallery Image File
               </Button>
-              <Input placeholder="Verification document URL" value={editRestaurant.verificationDoc} onChange={e => setEditRestaurant(prev => ({ ...prev, verificationDoc: e.target.value }))} />
-              <input
-                ref={editVerificationDocInputRef}
-                type="file"
-                accept="application/pdf,.doc,.docx"
-                className="hidden"
-                onChange={(e) => void handleEditVerificationDocFileChange(e)}
-              />
-              <Button type="button" variant="outline" onClick={() => editVerificationDocInputRef.current?.click()} disabled={isUploadingEditVerificationDoc}>
-                {isUploadingEditVerificationDoc ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                Replace Verification Document File
-              </Button>
               <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => void handleSaveEditedRestaurant()} disabled={savingEditRestaurant}>
                 Save Changes
               </Button>
@@ -623,21 +678,29 @@ const AdminDashboard = () => {
             ))}
           </div>
         </div>
-        {filteredOrders.length === 0 ? (
+        {groupedOrders.length === 0 ? (
           <p className="py-8 text-center text-muted-foreground">No orders yet</p>
         ) : (
           <div className="space-y-3">
-            {filteredOrders.map(order => (
-              <div key={order.id} className="rounded-xl border bg-card p-4 shadow-sm">
-                <div className="flex items-center justify-between">
+            {groupedOrders.map(group => (
+              <div key={group.restaurantName} className="rounded-xl border bg-card p-4 shadow-sm">
+                <div className="mb-3 flex items-center justify-between border-b pb-2">
                   <div>
-                    <span className="font-semibold text-foreground">{order.id}</span>
-                    <span className="ml-2 text-sm text-muted-foreground">{order.restaurantName}</span>
+                    <h3 className="font-semibold text-foreground">{group.restaurantName}</h3>
+                    <p className="text-xs text-muted-foreground">{group.orders.length} orders</p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Badge>{order.status.replace(/_/g, ' ')}</Badge>
-                    <span className="font-semibold text-foreground">₹{order.total.toFixed(2)}</span>
-                  </div>
+                  <Badge className="bg-primary/10 text-primary">₹{group.totalRevenue.toFixed(2)}</Badge>
+                </div>
+                <div className="space-y-2">
+                  {group.orders.map(order => (
+                    <div key={order.id} className="flex items-center justify-between rounded-lg border px-3 py-2">
+                      <span className="font-semibold text-foreground">{order.id}</span>
+                      <div className="flex items-center gap-3">
+                        <Badge>{order.status.replace(/_/g, ' ')}</Badge>
+                        <span className="font-semibold text-foreground">₹{order.total.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}

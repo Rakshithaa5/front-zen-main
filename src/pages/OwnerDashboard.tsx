@@ -1,10 +1,11 @@
 import { ChangeEvent, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Trash2, Eye, EyeOff, ChefHat, Pencil, MapPin, Loader2, Leaf, Beef, BarChart3 } from 'lucide-react';
+import { Plus, Trash2, Eye, EyeOff, ChefHat, Pencil, MapPin, Loader2, Leaf, Beef, BarChart3, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import apiService from '@/services/api';
@@ -29,6 +30,9 @@ const OwnerDashboard = () => {
   const [editItem, setEditItem] = useState({ name: '', description: '', price: '', category: '', image: '', isVeg: false });
   const [isUploadingNewImage, setIsUploadingNewImage] = useState(false);
   const [isUploadingEditImage, setIsUploadingEditImage] = useState(false);
+  const [showSecurityPanel, setShowSecurityPanel] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [changingPassword, setChangingPassword] = useState(false);
   const newImageInputRef = useRef<HTMLInputElement | null>(null);
   const editImageInputRef = useRef<HTMLInputElement | null>(null);
   const defaultMenuImage = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400';
@@ -129,6 +133,36 @@ const OwnerDashboard = () => {
     editImageInputRef.current?.click();
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      toast.error('Please fill all password fields');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 8) {
+      toast.error('New password must be at least 8 characters');
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error('New password and confirm password do not match');
+      return;
+    }
+
+    try {
+      setChangingPassword(true);
+      await apiService.changePassword(passwordForm.currentPassword, passwordForm.newPassword);
+      toast.success('Password changed successfully');
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to change password');
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   if (!restaurant) {
     return (
       <div className="container flex min-h-[60vh] items-center justify-center">
@@ -188,6 +222,64 @@ const OwnerDashboard = () => {
             <p className="mt-1 line-clamp-2 text-sm text-foreground">{restaurant.description}</p>
           </div>
         </div>
+      </div>
+
+      <div className="mb-8 rounded-xl border bg-card p-5 shadow-sm">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between"
+          onClick={() => setShowSecurityPanel(prev => !prev)}
+        >
+          <div className="text-left">
+            <h2 className="font-display text-lg font-bold text-foreground">Owner Profile & Security</h2>
+            <p className="text-sm text-muted-foreground">Click to manage your account details and password.</p>
+          </div>
+          {showSecurityPanel ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
+        </button>
+
+        {showSecurityPanel && (
+          <div className="mt-4">
+            <div className="mb-4 grid gap-3 rounded-lg border bg-muted/20 p-3 text-sm sm:grid-cols-2">
+              <p><span className="font-semibold">Owner Name:</span> {user?.name || '-'}</p>
+              <p><span className="font-semibold">Owner Email:</span> {user?.email || '-'}</p>
+            </div>
+            <h3 className="mb-3 text-sm font-semibold text-foreground">Change Password</h3>
+            <form className="grid gap-4 md:grid-cols-3" onSubmit={handleChangePassword}>
+              <div>
+                <Label htmlFor="ownerCurrentPassword" className="text-sm font-medium">Current Password</Label>
+                <Input
+                  id="ownerCurrentPassword"
+                  type="password"
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ownerNewPassword" className="text-sm font-medium">New Password</Label>
+                <Input
+                  id="ownerNewPassword"
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ownerConfirmPassword" className="text-sm font-medium">Confirm Password</Label>
+                <Input
+                  id="ownerConfirmPassword"
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                />
+              </div>
+              <div className="md:col-span-3">
+                <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90" disabled={changingPassword}>
+                  {changingPassword ? 'Updating...' : 'Update Password'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
 
       <div>

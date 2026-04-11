@@ -1,6 +1,7 @@
 export interface Restaurant {
   id: string;
   name: string;
+  ownerName?: string;
   cuisine: string[];
   rating: number;
   priceRange: 1 | 2 | 3;

@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 interface BackendRestaurant {
   id: string;
   name: string;
+  owner_name?: string;
   cuisine: string[];
   rating: number;
   price_range: 1 | 2 | 3;
@@ -34,11 +35,20 @@ interface BackendMenuItem {
   is_available: boolean;
 }
 
+interface BackendCreateRestaurantResponse {
+  restaurant: BackendRestaurant;
+  ownerCredentials?: {
+    name: string;
+    email: string;
+    password: string;
+  };
+}
+
 interface AppContextType {
   restaurants: Restaurant[];
   menuItems: MenuItem[];
   loading: boolean;
-  addRestaurant: (restaurant: Restaurant) => Promise<void>;
+  addRestaurant: (restaurant: Restaurant, ownerName?: string) => Promise<{ name: string; email: string; password: string } | null>;
   deleteRestaurant: (id: string) => Promise<void>;
   updateRestaurant: (restaurant: Restaurant) => Promise<void>;
   addMenuItem: (item: MenuItem) => Promise<void>;
@@ -72,6 +82,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const mapRestaurant = (r: BackendRestaurant): Restaurant => ({
     id: r.id,
     name: r.name,
+    ownerName: r.owner_name || '',
     cuisine: r.cuisine,
     rating: r.rating,
     priceRange: r.price_range,
@@ -156,11 +167,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [authLoading, fetchMenuItems, user?.restaurantId, user?.role]);
 
-  const addRestaurant = async (restaurant: Restaurant) => {
+  const addRestaurant = async (restaurant: Restaurant, ownerName?: string) => {
     try {
       const created = await apiService.createRestaurant({
         id: restaurant.id,
         name: restaurant.name,
+        owner_name: ownerName,
         cuisine: restaurant.cuisine,
         rating: restaurant.rating,
         price_range: restaurant.priceRange,
@@ -174,14 +186,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         verification_doc: restaurant.verificationDoc,
         is_verified: restaurant.isVerified,
         verified_at: restaurant.verifiedAt || null,
-      }) as BackendRestaurant;
+      }) as BackendRestaurant | BackendCreateRestaurantResponse;
 
-      const transformed = mapRestaurant(created);
+      const createdRestaurant = 'restaurant' in created ? created.restaurant : created;
+      const ownerCredentials = 'ownerCredentials' in created ? (created.ownerCredentials || null) : null;
+
+      const transformed = mapRestaurant(createdRestaurant);
       setRestaurants(prev => [...prev, transformed]);
       toast.success(`${transformed.name} added successfully`);
+      return ownerCredentials;
     } catch (error) {
       toast.error('Failed to add restaurant');
       console.error('Error adding restaurant:', error);
+      return null;
     }
   };
 
@@ -202,6 +219,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     try {
       const updated = await apiService.updateRestaurant(restaurant.id, {
         name: restaurant.name,
+        owner_name: restaurant.ownerName,
         cuisine: restaurant.cuisine,
         rating: restaurant.rating,
         price_range: restaurant.priceRange,
