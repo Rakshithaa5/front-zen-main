@@ -33,17 +33,29 @@ const OrderTracking = () => {
     const idx = steps.findIndex(s => s.status === order.status);
     setCurrentIdx(idx >= 0 ? idx : 0);
 
+    // Don't auto-progress if already delivered
     if (order.status === 'delivered') return;
+
+    // Only auto-progress orders placed within the last hour
+    const elapsedMs = Date.now() - new Date(order.createdAt).getTime();
+    const ONE_HOUR = 60 * 60 * 1000;
+    if (elapsedMs > ONE_HOUR) return;
 
     const timers: ReturnType<typeof setTimeout>[] = [];
 
     steps.forEach((step, i) => {
-      if (i <= idx || step.delayMs === 0) return;
-      const t = setTimeout(() => {
+      if (i <= idx) return;
+      const remainingMs = step.delayMs - elapsedMs;
+      if (remainingMs <= 0) {
         updateOrderStatus(order.id, step.status);
         setCurrentIdx(i);
-      }, step.delayMs - steps[idx].delayMs);
-      timers.push(t);
+      } else {
+        const t = setTimeout(() => {
+          updateOrderStatus(order.id, step.status);
+          setCurrentIdx(i);
+        }, remainingMs);
+        timers.push(t);
+      }
     });
 
     return () => timers.forEach(clearTimeout);

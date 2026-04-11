@@ -3,6 +3,7 @@ const supabase = require('../supabase');
 const authMiddleware = require('../middleware/auth');
 
 const VALID_STATUSES = ['placed', 'accepted', 'preparing', 'out_for_delivery', 'delivered'];
+const STATUS_RANK = new Map(VALID_STATUSES.map((status, index) => [status, index]));
 
 // POST /api/orders — place a new order
 router.post('/', authMiddleware, async (req, res) => {
@@ -85,12 +86,9 @@ router.get('/:id', authMiddleware, async (req, res) => {
 
 // PATCH /api/orders/:id/status — admin or owner updates status
 router.patch('/:id/status', authMiddleware, async (req, res) => {
-  if (!['admin', 'restaurant_owner'].includes(req.user.role))
-    return res.status(403).json({ error: 'Forbidden' });
-
   const { data: existingOrder, error: fetchError } = await supabase
     .from('orders')
-    .select('id, restaurant_id')
+    .select('id, user_id, restaurant_id, status')
     .eq('id', req.params.id)
     .single();
 
@@ -98,15 +96,33 @@ router.patch('/:id/status', authMiddleware, async (req, res) => {
     return res.status(404).json({ error: 'Order not found' });
   }
 
-  if (req.user.role === 'restaurant_owner') {
+  const { status } = req.body;
+  if (!VALID_STATUSES.includes(status)) {
+    return res.status(400).json({ error: `status must be one of: ${VALID_STATUSES.join(', ')}` });
+  }
+
+  const currentRank = STATUS_RANK.get(existingOrder.status);
+  const nextRank = STATUS_RANK.get(status);
+
+  if (nextRank == null || currentRank == null) {
+    return res.status(400).json({ error: 'Invalid status transition' });
+  }
+
+  if (req.user.role === 'customer') {
+    if (existingOrder.user_id !== req.user.id) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    if (nextRank < currentRank) {
+      return res.status(400).json({ error: 'Status can only move forward' });
+    }
+  } else if (req.user.role === 'restaurant_owner') {
     if (!req.user.restaurantId || existingOrder.restaurant_id !== req.user.restaurantId) {
       return res.status(403).json({ error: 'Forbidden' });
     }
+  } else if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Forbidden' });
   }
-
-  const { status } = req.body;
-  if (!VALID_STATUSES.includes(status))
-    return res.status(400).json({ error: `status must be one of: ${VALID_STATUSES.join(', ')}` });
 
   const { data, error } = await supabase
     .from('orders')
