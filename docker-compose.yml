@@ -1,5 +1,6 @@
 services:
   backend:
+    image: rakshithaa5/front-zen-backend:latest
     build:
       context: ./backend
     ports:
@@ -11,6 +12,7 @@ services:
     restart: unless-stopped
 
   frontend:
+    image: rakshithaa5/front-zen-frontend:latest
     build:
       context: .
       args:
