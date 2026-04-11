@@ -52,6 +52,11 @@ jobs:
         run: find backend -name '*.js' -print0 | xargs -0 -n 1 node --check
 
       - name: Start backend API
+        env:
+          PORT: 5000
+          JWT_SECRET: ci-jwt-secret-for-health-check
+          SUPABASE_URL: https://example.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-service-role-key
         run: npm start --prefix backend > /tmp/backend.log 2>&1 & echo $! > /tmp/backend.pid
 
       - name: Wait for backend health check
