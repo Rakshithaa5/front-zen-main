@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { CheckCircle2, Package, ChefHat, Truck, PartyPopper, Clock, MapPin, Phone } from 'lucide-react';
+import { CheckCircle2, Package, ChefHat, Truck, PartyPopper, Clock, MapPin, Phone, CircleDot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/context/CartContext';
@@ -193,6 +193,57 @@ const OrderTracking = () => {
                   <div>
                     <p className="font-medium text-foreground">Contact</p>
                     <p className="text-muted-foreground">{order.phoneNumber || '+91 98765 43210'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+              <div className="relative h-[22rem] overflow-hidden bg-gradient-to-br from-[#e7efe0] via-[#dfe9d6] to-[#d4dfcb]">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_24%,rgba(255,255,255,0.45),transparent_24%),radial-gradient(circle_at_78%_26%,rgba(255,255,255,0.18),transparent_22%),radial-gradient(circle_at_55%_72%,rgba(255,255,255,0.16),transparent_18%)]" />
+
+                <div className="absolute inset-0 opacity-35">
+                  <div className="absolute left-[-6%] top-[30%] h-24 w-[68%] rounded-full border-[18px] border-[#c7bcab]" />
+                  <div className="absolute left-[12%] top-[60%] h-4 w-[54%] rotate-[-8deg] rounded-full bg-[#d9cebf]" />
+                  <div className="absolute left-[40%] top-[14%] h-[74%] w-4 rotate-[14deg] rounded-full bg-[#bfb8aa]" />
+                  <div className="absolute right-[16%] top-[18%] h-[62%] w-4 rotate-[28deg] rounded-full bg-[#d9cebf]" />
+                </div>
+
+                <div className="absolute left-10 right-10 top-4 z-20 rounded-xl border border-white/85 bg-white/90 px-3 py-2 shadow-[0_8px_22px_rgba(15,23,42,0.10)] backdrop-blur-sm">
+                  <p className="text-center text-sm font-semibold text-slate-700">Delivering To</p>
+                  <p className="mt-1 text-center text-xs text-slate-700 sm:text-sm">
+                    {order.deliveryAddress || '123 Example Street, City'}
+                  </p>
+                </div>
+
+                <div className="absolute left-4 top-[42%] z-20 max-w-[11rem] rounded-lg border border-white/85 bg-white/90 px-3 py-2 shadow-md shadow-black/10 backdrop-blur-sm">
+                  <p className="text-sm font-semibold text-slate-800">{order.restaurantName}</p>
+                  <p className="mt-1 text-xs text-slate-600">Pickup point</p>
+                </div>
+
+                <svg className="absolute inset-0 h-full w-full" viewBox="0 0 800 360" preserveAspectRatio="none">
+                  <path d="M208 187 L 656 230" fill="none" stroke="rgba(37,99,235,0.9)" strokeWidth="5" strokeLinecap="round" />
+                  <path d="M208 187 L 656 230" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="2" strokeDasharray="8 8" strokeLinecap="round" />
+                </svg>
+
+                <div className="absolute left-[26%] top-[52%] z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
+                  <div className="h-4 w-4 rounded-full border-2 border-white bg-emerald-600 shadow-md shadow-emerald-600/30" />
+                  <span className="mt-1 rounded-full bg-emerald-600 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white shadow-sm">
+                    Start
+                  </span>
+                </div>
+
+                <div className="absolute left-[82%] top-[64%] z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
+                  <div className="h-4 w-4 rounded-full border-2 border-white bg-rose-600 shadow-md shadow-rose-600/30" />
+                  <span className="mt-1 rounded-full bg-rose-600 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white shadow-sm">
+                    End
+                  </span>
+                </div>
+
+                <div className="absolute inset-x-0 bottom-4 z-20 px-4">
+                  <div className="mx-auto flex max-w-[34rem] items-center justify-between rounded-full border border-white/85 bg-white/90 px-3 py-1.5 text-[10px] font-medium text-slate-600 shadow-md shadow-black/10 backdrop-blur-sm">
+                    <span>Pickup: {order.restaurantName}</span>
+                    <span>Drop-off: {order.deliveryAddress || 'Customer location'}</span>
                   </div>
                 </div>
               </div>
