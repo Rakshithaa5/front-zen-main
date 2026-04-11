@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const supabase = require('../supabase');
 const authMiddleware = require('../middleware/auth');
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const path = require('path');
@@ -161,6 +162,22 @@ router.get('/:id/menu', async (req, res) => {
   const { category } = req.query;
   let query = supabase.from('menu_items').select('*').eq('restaurant_id', req.params.id);
   if (category) query = query.eq('category', category);
+
+  const token = req.headers.authorization?.split(' ')[1];
+  let userRole = null;
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      userRole = decoded.role;
+    } catch {
+      userRole = null;
+    }
+  }
+
+  if (!['admin', 'restaurant_owner'].includes(userRole)) {
+    query = query.eq('is_available', true);
+  }
 
   const { data, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
