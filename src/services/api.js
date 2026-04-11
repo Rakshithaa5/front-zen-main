@@ -62,6 +62,13 @@ class ApiService {
     this.clearToken();
   }
 
+  async changePassword(currentPassword, newPassword) {
+    return this.request('/auth/change-password', {
+      method: 'PATCH',
+      body: { currentPassword, newPassword },
+    });
+  }
+
   // Restaurants
   async getRestaurants(filters = {}) {
     const params = new URLSearchParams(filters);
@@ -89,6 +96,12 @@ class ApiService {
   async deleteRestaurant(id) {
     return this.request(`/restaurants/${id}`, {
       method: 'DELETE',
+    });
+  }
+
+  async resetOwnerPassword(restaurantId) {
+    return this.request(`/restaurants/${restaurantId}/reset-owner-password`, {
+      method: 'POST',
     });
   }
 

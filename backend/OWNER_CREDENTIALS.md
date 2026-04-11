@@ -21,7 +21,7 @@ Run the Supabase seed or schema script to create the admin and owner users.
 | Sweet Tooth      | Meera Patel          | sweettooth@moodbyte.com      | Owner@123 |
 | Soup & Soul      | Linda Brooks         | soulandsoul@moodbyte.com     | Owner@123 |
 | Taco Tierra      | Carlos Mendez        | tacotierra@moodbyte.com      | Owner@123 |
-| Sushi Harbor     | Kenji Tanaka         | sushiharbor@moodbyte.com     | Owner@123 |
+| Sushi Harbor     | Kenji Tanaka         | sushiharbor@moodbyte.com     | M%DtTgCXZbiv |
 | Curry Leaf       | Lakshmi Iyer         | curryleaf@moodbyte.com       | Owner@123 |
 | Pho Lotus        | Linh Nguyen          | pholotus@moodbyte.com        | Owner@123 |
 | Mediterraneo     | Nikos Papadopoulos   | mediterraneo@moodbyte.com    | Owner@123 |
@@ -42,3 +42,4 @@ Run the Supabase seed or schema script to create the admin and owner users.
 | Seoul Street     | Ji-ho Park           | seoulstreet@moodbyte.com     | Owner@123 |
 | Falafel Farm     | Omar Hassan          | falafelfarm@moodbyte.com     | Owner@123 |
 | Crisp Corner     | Nina Cruz            | crispcorner@moodbyte.com     | Owner@123 |
+ squareburgers1@moodbyte.com 5NTnA5uJPyRY

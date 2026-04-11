@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { Link } from 'react-router-dom';
+import apiService from '@/services/api';
+import { toast } from 'sonner';
 
 const CustomerProfile = () => {
   const { user } = useAuth();
@@ -18,10 +20,46 @@ const CustomerProfile = () => {
     phone: '+1 234 567 8900',
     address: '123 Example Street, City, State 12345'
   });
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const handleSave = () => {
     setEditing(false);
     // TODO: Call API to update profile
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      toast.error('Please fill all password fields');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 8) {
+      toast.error('New password must be at least 8 characters');
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error('New password and confirm password do not match');
+      return;
+    }
+
+    try {
+      setChangingPassword(true);
+      await apiService.changePassword(passwordForm.currentPassword, passwordForm.newPassword);
+      toast.success('Password changed successfully');
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to change password');
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   const totalSpent = orders.reduce((sum, o) => sum + o.total, 0);
@@ -106,6 +144,42 @@ const CustomerProfile = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <h2 className="mb-4 text-xl font-semibold text-foreground">Change Password</h2>
+            <form className="space-y-4" onSubmit={handleChangePassword}>
+              <div>
+                <Label htmlFor="currentPassword" className="text-sm font-medium">Current Password</Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="newPassword" className="text-sm font-medium">New Password</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm New Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                />
+              </div>
+              <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90" disabled={changingPassword}>
+                {changingPassword ? 'Updating...' : 'Update Password'}
+              </Button>
+            </form>
           </div>
 
           {/* Order History */}

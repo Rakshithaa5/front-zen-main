@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const supabase = require('../supabase');
 const ownerRestaurantMap = require('../ownerRestaurantMap');
+const authMiddleware = require('../middleware/auth');
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -67,6 +68,46 @@ router.post('/login', async (req, res) => {
   );
   const { password_hash, ...safeUser } = user;
   res.json({ user: { ...safeUser, restaurantId }, token });
+});
+
+// PATCH /api/auth/change-password
+router.patch('/change-password', authMiddleware, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'currentPassword and newPassword are required' });
+  }
+
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: 'New password must be at least 8 characters long' });
+  }
+
+  const { data: user, error } = await supabase
+    .from('users')
+    .select('id, password_hash')
+    .eq('id', req.user.id)
+    .single();
+
+  if (error || !user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  const valid = await bcrypt.compare(currentPassword, user.password_hash);
+  if (!valid) {
+    return res.status(401).json({ error: 'Current password is incorrect' });
+  }
+
+  const nextHash = await bcrypt.hash(newPassword, 10);
+  const { error: updateError } = await supabase
+    .from('users')
+    .update({ password_hash: nextHash })
+    .eq('id', req.user.id);
+
+  if (updateError) {
+    return res.status(500).json({ error: updateError.message });
+  }
+
+  return res.json({ message: 'Password changed successfully' });
 });
 
 module.exports = router;
