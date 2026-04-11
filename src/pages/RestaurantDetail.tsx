@@ -95,9 +95,7 @@ const FALLBACK_FOOD_IMAGE = 'https://images.unsplash.com/photo-1498837167922-ddd
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     <span className="font-semibold text-foreground">₹{item.price.toFixed(2)}</span>
-                    {!canOrder ? (
-                      <Badge variant="outline" className="text-xs">Owner View</Badge>
-                    ) : qty === 0 ? (
+                    {canOrder ? qty === 0 ? (
                       <Button size="sm" onClick={() => addItem(item, restaurant.id, restaurant.name)} className="gap-1 bg-primary text-primary-foreground hover:bg-primary/90">
                         <Plus className="h-3.5 w-3.5" /> Add
                       </Button>
@@ -111,7 +109,7 @@ const FALLBACK_FOOD_IMAGE = 'https://images.unsplash.com/photo-1498837167922-ddd
                           <Plus className="h-3.5 w-3.5" />
                         </Button>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               </div>

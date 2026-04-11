@@ -4,6 +4,35 @@ import { useAuth } from '@/context/AuthContext';
 import apiService from '@/services/api';
 import { toast } from 'sonner';
 
+const ORDER_STEPS: { status: OrderStatus; delayMs: number }[] = [
+  { status: 'placed', delayMs: 0 },
+  { status: 'accepted', delayMs: 12000 },
+  { status: 'preparing', delayMs: 25000 },
+  { status: 'out_for_delivery', delayMs: 40000 },
+  { status: 'delivered', delayMs: 55000 },
+];
+
+const ORDER_STEP_RANK = new Map(ORDER_STEPS.map((step, index) => [step.status, index]));
+
+const getExpectedOrderStatus = (createdAt: string, currentStatus: OrderStatus) => {
+  const elapsedMs = Date.now() - new Date(createdAt).getTime();
+  const oneHour = 60 * 60 * 1000;
+
+  if (elapsedMs > oneHour || currentStatus === 'delivered') {
+    return currentStatus;
+  }
+
+  let nextStatus = currentStatus;
+
+  for (const step of ORDER_STEPS) {
+    if (step.delayMs <= elapsedMs && ORDER_STEP_RANK.get(step.status)! > ORDER_STEP_RANK.get(nextStatus)!) {
+      nextStatus = step.status;
+    }
+  }
+
+  return nextStatus;
+};
+
 interface BackendOrderItem {
   id: string;
   name: string;
@@ -25,6 +54,7 @@ interface BackendOrder {
   created_at: string;
   restaurant_name: string;
   restaurant_id?: string;
+  delivery_address?: string;
 }
 
 interface CartContextType {
@@ -73,15 +103,29 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       const data = (await apiService.getOrders()) as BackendOrder[];
       // Transform backend data to frontend format
-      const transformedOrders = data.map((order) => ({
-        id: order.id,
-        items: mapOrderItems(order.items || [], order.restaurant_id, order.restaurant_name),
-        total: Number(order.total),
-        status: order.status,
-        paymentMethod: order.payment_method,
-        transactionId: order.transaction_id,
-        createdAt: order.created_at,
-        restaurantName: order.restaurant_name,
+      const transformedOrders = await Promise.all(data.map(async (order) => {
+        const expectedStatus = getExpectedOrderStatus(order.created_at, order.status);
+
+        if (expectedStatus !== order.status) {
+          try {
+            await apiService.updateOrderStatus(order.id, expectedStatus);
+          } catch {
+            // Ignore sync errors and still show the derived status locally.
+          }
+        }
+
+        return {
+          id: order.id,
+          items: mapOrderItems(order.items || [], order.restaurant_id, order.restaurant_name),
+          total: Number(order.total),
+          status: expectedStatus,
+          paymentMethod: order.payment_method,
+          transactionId: order.transaction_id,
+          createdAt: order.created_at,
+          restaurantName: order.restaurant_name,
+          restaurantId: order.restaurant_id,
+          deliveryAddress: order.delivery_address,
+        };
       }));
       setOrders(transformedOrders);
     } catch (error: unknown) {
@@ -180,7 +224,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const updateOrderStatus = async (orderId: string, status: OrderStatus) => {
     // Update locally immediately for real-time tracking UI
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
-    // Also sync to backend silently
+    // Sync to backend
     try {
       await apiService.updateOrderStatus(orderId, status);
     } catch {
