@@ -25,19 +25,22 @@ const OrderTracking = () => {
   const { id } = useParams();
   const { orders, updateOrderStatus } = useCart();
   const order = orders.find(o => o.id === id);
+  const orderId = order?.id;
+  const orderStatus = order?.status;
+  const orderCreatedAt = order?.createdAt;
   const [currentIdx, setCurrentIdx] = useState(0);
 
   useEffect(() => {
-    if (!order) return;
+    if (!orderId || !orderStatus || !orderCreatedAt) return;
 
-    const idx = steps.findIndex(s => s.status === order.status);
+    const idx = steps.findIndex(s => s.status === orderStatus);
     setCurrentIdx(idx >= 0 ? idx : 0);
 
     // Don't auto-progress if already delivered
-    if (order.status === 'delivered') return;
+    if (orderStatus === 'delivered') return;
 
     // Only auto-progress orders placed within the last hour
-    const elapsedMs = Date.now() - new Date(order.createdAt).getTime();
+    const elapsedMs = Date.now() - new Date(orderCreatedAt).getTime();
     const ONE_HOUR = 60 * 60 * 1000;
     if (elapsedMs > ONE_HOUR) return;
 
@@ -47,11 +50,11 @@ const OrderTracking = () => {
       if (i <= idx) return;
       const remainingMs = step.delayMs - elapsedMs;
       if (remainingMs <= 0) {
-        updateOrderStatus(order.id, step.status);
+        updateOrderStatus(orderId, step.status);
         setCurrentIdx(i);
       } else {
         const t = setTimeout(() => {
-          updateOrderStatus(order.id, step.status);
+          updateOrderStatus(orderId, step.status);
           setCurrentIdx(i);
         }, remainingMs);
         timers.push(t);
@@ -59,7 +62,7 @@ const OrderTracking = () => {
     });
 
     return () => timers.forEach(clearTimeout);
-  }, [order?.id, order?.status]);
+  }, [orderId, orderStatus, orderCreatedAt, updateOrderStatus]);
 
   if (!order) {
     return (
