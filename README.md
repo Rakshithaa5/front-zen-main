@@ -1,45 +1,37 @@
-# Front Zen
+# Welcome to your Lovable project
 
-## Testing and Quality Assurance
+TODO: Document your project here
 
-### Static Code Analysis
+## Docker
 
-This repository uses ESLint and the TypeScript compiler as its static analysis layer.
+Build and run the app with Docker Compose:
 
-- `npm run lint` checks the React and TypeScript source for style and correctness issues without running the app.
-- The ESLint configuration in [eslint.config.js](eslint.config.js) applies the recommended JavaScript, TypeScript, React Hooks, and React Refresh rules.
-- This codebase is not Python-based, so PyLint is not applicable here; ESLint is the equivalent static analysis tool for this project.
+```bash
+docker compose up --build
+```
 
-### Continuous Integration and Deployment
+Frontend: http://localhost:8080
 
-The CI pipeline is implemented with GitHub Actions and validates the main project quality gates on every push and pull request. The CD pipeline deploys the frontend to GitHub Pages from the `main` branch.
+Backend: http://localhost:5000
 
-- Install dependencies with `npm ci`.
-- Run static analysis with `npm run lint`.
-- Execute unit tests with `npm run test`.
-- Build the production bundle with `npm run build`.
-- The backend is validated separately by installing dependencies from `backend/package-lock.json` and checking that the main server file parses correctly.
+The backend expects its environment variables in `backend/.env`, including `JWT_SECRET`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY`.
 
-The workflow definitions live in [ci.yml](.github/workflows/ci.yml) and [cd.yml](.github/workflows/cd.yml).
+## Docker Hub
 
-### Unit Testing
+Docker Hub will not show a repository until you push the first image.
 
-Unit tests are written with Vitest.
+If you want to publish the images for the account shown in your screenshot (`rakshithaa5`), use a repository name of your choice and push with these commands:
 
-- The test runner is configured in [vitest.config.ts](vitest.config.ts).
-- Test setup lives in [src/test/setup.ts](src/test/setup.ts).
-- The current test suite is minimal and includes a placeholder spec in [src/test/example.test.ts](src/test/example.test.ts).
-- PyUnit is not applicable in this repository because the application is implemented in TypeScript and React rather than Python.
+```bash
+docker login
 
-### Agile Testing Quadrants
+docker build -t rakshithaa5/front-zen-frontend:latest .
+docker build -t rakshithaa5/front-zen-backend:latest ./backend
 
-| Quadrant | Focus | Example tests in this repo |
-| --- | --- | --- |
-| Automated, Technology-facing | Tooling and code correctness | ESLint checks, Vitest unit tests |
-| Automated, Business-facing | User workflows and visible behavior | Component tests for login, cart, and checkout flows |
-| Manual, Technology-facing | Environment and integration checks | Manual backend startup and API verification against Supabase |
-| Manual, Business-facing | End-user validation | Browse restaurants, add items to cart, place an order, and track status |
+docker push rakshithaa5/front-zen-frontend:latest
+docker push rakshithaa5/front-zen-backend:latest
+```
 
-## Project Setup
+If you prefer versioned tags, replace `latest` with something like `v1.0.0`.
 
-See [backend/SETUP.md](backend/SETUP.md) for backend and Supabase configuration.
+After the push, open Docker Hub and refresh the Repositories page. You should see the new repo and its tag list there.

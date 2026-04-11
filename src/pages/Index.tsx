@@ -1,19 +1,55 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { ArrowRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import MoodSelector from '@/components/MoodSelector';
 import RestaurantCard from '@/components/RestaurantCard';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { Mood } from '@/data/types';
 
 const Index = () => {
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
+  const [pendingMood, setPendingMood] = useState<Mood | null>(null);
+  const [showMoodAuthPrompt, setShowMoodAuthPrompt] = useState(false);
+  const navigate = useNavigate();
   const { restaurants } = useApp();
+  const { user, isAuthenticated } = useAuth();
+
+  if (isAuthenticated && user?.role === 'restaurant_owner') {
+    return <Navigate to="/owner" replace />;
+  }
+
+  if (isAuthenticated && user?.role === 'admin') {
+    return <Navigate to="/admin" replace />;
+  }
 
   const filteredRestaurants = selectedMood
     ? restaurants.filter(r => r.cuisine.some(c => selectedMood.categories.includes(c)))
     : restaurants;
+
+  const handleMoodSelect = (mood: Mood) => {
+    if (!isAuthenticated) {
+      setPendingMood(mood);
+      setShowMoodAuthPrompt(true);
+      return;
+    }
+
+    setSelectedMood(mood);
+    navigate(`/mood-recommendations?mood=${encodeURIComponent(mood.label)}`);
+  };
+
+  const moodRedirectPath = pendingMood
+    ? `/mood-recommendations?mood=${encodeURIComponent(pendingMood.label)}`
+    : '/mood-recommendations';
 
   return (
     <div className="min-h-screen">
@@ -35,8 +71,30 @@ const Index = () => {
         </div>
       </section>
 
+      <section className="container -mt-8 pb-10">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {restaurants.slice(0, 4).map((restaurant) => (
+            <Link key={restaurant.id} to={`/restaurant/${restaurant.id}`} className="group relative overflow-hidden rounded-2xl border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
+              <div className="relative h-40">
+                <img
+                  src={restaurant.image}
+                  alt={restaurant.name}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-left">
+                  <p className="text-sm font-medium text-white/80">Featured restaurant</p>
+                  <h3 className="font-display text-xl font-bold text-white">{restaurant.name}</h3>
+                  <p className="mt-1 text-xs text-white/75 line-clamp-1">{restaurant.cuisine.join(' • ')}</p>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       <div className="container">
-        <MoodSelector onSelect={setSelectedMood} selected={selectedMood} />
+        <MoodSelector onSelect={handleMoodSelect} selected={selectedMood} />
       </div>
 
       <section className="container pb-16">
@@ -58,6 +116,33 @@ const Index = () => {
           </div>
         )}
       </section>
+
+      <Dialog open={showMoodAuthPrompt} onOpenChange={setShowMoodAuthPrompt}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Welcome to MoodByte</DialogTitle>
+            <DialogDescription>
+              To unlock mood-based recommendations for {pendingMood?.emoji} {pendingMood?.label}, please log in or create an account.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button variant="outline" onClick={() => setShowMoodAuthPrompt(false)}>
+              Maybe Later
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/login', { state: { mode: 'login', redirectTo: moodRedirectPath } })}
+            >
+              Log In
+            </Button>
+            <Button
+              onClick={() => navigate('/login', { state: { mode: 'register', redirectTo: moodRedirectPath } })}
+            >
+              Sign Up
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

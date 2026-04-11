@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 class ApiService {
   constructor() {
@@ -62,6 +62,13 @@ class ApiService {
     this.clearToken();
   }
 
+  async changePassword(currentPassword, newPassword) {
+    return this.request('/auth/change-password', {
+      method: 'PATCH',
+      body: { currentPassword, newPassword },
+    });
+  }
+
   // Restaurants
   async getRestaurants(filters = {}) {
     const params = new URLSearchParams(filters);
@@ -72,9 +79,102 @@ class ApiService {
     return this.request(`/restaurants/${id}`);
   }
 
+  async createRestaurant(restaurantData) {
+    return this.request('/restaurants', {
+      method: 'POST',
+      body: restaurantData,
+    });
+  }
+
+  async updateRestaurant(id, restaurantData) {
+    return this.request(`/restaurants/${id}`, {
+      method: 'PUT',
+      body: restaurantData,
+    });
+  }
+
+  async deleteRestaurant(id) {
+    return this.request(`/restaurants/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async resetOwnerPassword(restaurantId) {
+    return this.request(`/restaurants/${restaurantId}/reset-owner-password`, {
+      method: 'POST',
+    });
+  }
+
   async getMenu(restaurantId, category) {
     const params = category ? `?category=${category}` : '';
     return this.request(`/restaurants/${restaurantId}/menu${params}`);
+  }
+
+  async createMenuItem(itemData) {
+    return this.request('/menu', {
+      method: 'POST',
+      body: itemData,
+    });
+  }
+
+  async updateMenuItem(id, itemData) {
+    return this.request(`/menu/${id}`, {
+      method: 'PUT',
+      body: itemData,
+    });
+  }
+
+  async updateMenuAvailability(id, isAvailable) {
+    return this.request(`/menu/${id}/availability`, {
+      method: 'PATCH',
+      body: { isAvailable },
+    });
+  }
+
+  async deleteMenuItem(id) {
+    return this.request(`/menu/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async uploadMenuImage(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch(`${API_BASE}/menu/upload-image`, {
+      method: 'POST',
+      headers: {
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Image upload failed');
+    }
+
+    return data;
+  }
+
+  async uploadRestaurantAsset(file, assetType = 'image') {
+    const formData = new FormData();
+    formData.append('asset', file);
+
+    const response = await fetch(`${API_BASE}/restaurants/upload-asset?assetType=${encodeURIComponent(assetType)}`, {
+      method: 'POST',
+      headers: {
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Asset upload failed');
+    }
+
+    return data;
   }
 
   // Orders

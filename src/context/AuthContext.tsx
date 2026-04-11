@@ -6,6 +6,7 @@ interface User {
   name: string;
   email: string;
   role: string;
+  restaurantId?: string | null;
 }
 
 interface AuthContextType {
@@ -30,7 +31,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // For now, we'll just check if it exists
       const userData = localStorage.getItem('user');
       if (userData) {
-        setUser(JSON.parse(userData));
+        try {
+          setUser(JSON.parse(userData) as User);
+        } catch {
+          localStorage.removeItem('user');
+          apiService.logout();
+        }
       }
     }
     setLoading(false);

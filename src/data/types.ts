@@ -1,14 +1,20 @@
 export interface Restaurant {
   id: string;
   name: string;
+  ownerName?: string;
   cuisine: string[];
   rating: number;
   priceRange: 1 | 2 | 3;
   image: string;
+  imageGallery: string[];
   deliveryTime: string;
   isVeg: boolean;
   address: string;
+  location: string;
   description: string;
+  verificationDoc: string;
+  isVerified: boolean;
+  verifiedAt?: string | null;
 }
 
 export interface MenuItem {
@@ -39,6 +45,11 @@ export interface Order {
   transactionId: string;
   createdAt: string;
   restaurantName: string;
+  restaurantId?: string;
+  deliveryAddress?: string;
+  phoneNumber?: string;
+  couponCode?: string | null;
+  discountAmount?: number;
 }
 
 export type OrderStatus = 'placed' | 'accepted' | 'preparing' | 'out_for_delivery' | 'delivered';

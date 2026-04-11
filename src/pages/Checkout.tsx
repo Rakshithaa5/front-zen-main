@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { AVAILABLE_COUPONS } from '@/data/coupons';
 
 const paymentMethods = [
   { 
@@ -50,6 +51,7 @@ const Checkout = () => {
   const [payment, setPayment] = useState('upi');
   const [address, setAddress] = useState('123 Example Street, City');
   const [phone, setPhone] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState('');
   const [processing, setProcessing] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState({
     upiId: '',
@@ -68,7 +70,14 @@ const Checkout = () => {
   const subtotal = getTotal();
   const deliveryFee = 2.99;
   const tax = subtotal * 0.05;
-  const total = subtotal + deliveryFee + tax;
+  const activeCoupon = AVAILABLE_COUPONS.find(coupon => coupon.code === appliedCoupon) || null;
+  const couponDiscount = activeCoupon
+    ? (activeCoupon.discountType === 'percentage'
+      ? subtotal * (activeCoupon.discountValue / 100)
+      : activeCoupon.discountValue)
+    : 0;
+  const discountedSubtotal = Math.max(subtotal - couponDiscount, 0);
+  const total = discountedSubtotal + deliveryFee + tax;
 
   if (!isAuthenticated) {
     navigate('/login');
@@ -99,7 +108,7 @@ const Checkout = () => {
 
     setProcessing(true);
     try {
-      const order = await placeOrder(payment, address);
+      const order = await placeOrder(payment, address, phone, appliedCoupon);
       if (order) {
         navigate(`/order/${order.id}`);
       }
@@ -141,6 +150,47 @@ const Checkout = () => {
                   className="mt-1.5"
                   maxLength={10}
                 />
+              </div>
+              <div>
+                <Label htmlFor="coupon" className="text-sm font-medium">Coupon Code</Label>
+                <p className="mt-1.5 text-xs text-muted-foreground">Pick one of the available coupons below. Only listed codes are valid.</p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {AVAILABLE_COUPONS.map((coupon) => {
+                    const isSelected = appliedCoupon === coupon.code;
+
+                    return (
+                      <button
+                        key={coupon.code}
+                        type="button"
+                        onClick={() => {
+                          setAppliedCoupon(coupon.code);
+                          toast.success(`${coupon.code} applied`);
+                        }}
+                        className={`rounded-xl border p-4 text-left transition-all ${
+                          isSelected
+                            ? 'border-primary bg-primary/5 shadow-sm'
+                            : 'border-border hover:border-primary/40 hover:bg-accent/5'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-semibold text-foreground">{coupon.code}</p>
+                            <p className="text-sm text-muted-foreground">{coupon.label}</p>
+                          </div>
+                          <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium text-foreground">
+                            {coupon.discountType === 'percentage' ? `${coupon.discountValue}% off` : `₹${coupon.discountValue} off`}
+                          </span>
+                        </div>
+                        <p className="mt-3 text-sm text-muted-foreground">{coupon.description}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+                {appliedCoupon ? (
+                  <p className="mt-3 text-xs font-medium text-success">Applied coupon: {appliedCoupon}</p>
+                ) : (
+                  <p className="mt-3 text-xs text-muted-foreground">No coupon selected.</p>
+                )}
               </div>
             </div>
           </div>
@@ -286,7 +336,7 @@ const Checkout = () => {
                     {item.menuItem.name} × {item.quantity}
                   </span>
                   <span className="font-medium text-foreground">
-                    ${(item.menuItem.price * item.quantity).toFixed(2)}
+                    ₹{(item.menuItem.price * item.quantity).toFixed(2)}
                   </span>
                 </div>
               ))}
@@ -295,21 +345,25 @@ const Checkout = () => {
             <div className="space-y-2 border-b py-4 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span className="text-foreground">${subtotal.toFixed(2)}</span>
+                <span className="text-foreground">₹{subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Coupon Discount</span>
+                <span className="text-success">-₹{couponDiscount.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Delivery Fee</span>
-                <span className="text-foreground">${deliveryFee.toFixed(2)}</span>
+                <span className="text-foreground">₹{deliveryFee.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Tax (5%)</span>
-                <span className="text-foreground">${tax.toFixed(2)}</span>
+                <span className="text-foreground">₹{tax.toFixed(2)}</span>
               </div>
             </div>
 
             <div className="flex justify-between pt-4 text-lg font-bold">
               <span className="text-foreground">Total</span>
-              <span className="text-primary">${total.toFixed(2)}</span>
+              <span className="text-primary">₹{total.toFixed(2)}</span>
             </div>
 
             <Button
@@ -318,7 +372,7 @@ const Checkout = () => {
               onClick={handlePlace}
               disabled={processing}
             >
-              {processing ? 'Processing Payment...' : `Place Order • $${total.toFixed(2)}`}
+              {processing ? 'Processing Payment...' : `Place Order • ₹${total.toFixed(2)}`}
             </Button>
 
             <p className="mt-3 text-center text-xs text-muted-foreground">
