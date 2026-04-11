@@ -1,8 +1,19 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useCallback, useContext, useState, ReactNode, useEffect } from 'react';
 import { CartItem, MenuItem, Order, OrderStatus } from '@/data/types';
 import { useAuth } from '@/context/AuthContext';
 import apiService from '@/services/api';
 import { toast } from 'sonner';
+
+interface OrderApiRow {
+  id: string;
+  items: CartItem[];
+  total: number;
+  status: OrderStatus;
+  payment_method: string;
+  transaction_id: string;
+  created_at: string;
+  restaurant_name: string;
+}
 
 interface CartContextType {
   items: CartItem[];
@@ -27,14 +38,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(false);
   const { isAuthenticated } = useAuth();
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     if (!isAuthenticated) return;
-    
+
     try {
       setLoading(true);
-      const data = await apiService.getOrders();
+      const data: OrderApiRow[] = await apiService.getOrders();
       // Transform backend data to frontend format
-      const transformedOrders = data.map((order: any) => ({
+      const transformedOrders: Order[] = data.map((order) => ({
         id: order.id,
         items: order.items,
         total: order.total,
@@ -45,19 +56,19 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         restaurantName: order.restaurant_name,
       }));
       setOrders(transformedOrders);
-    } catch (error: any) {
+    } catch (error) {
       toast.error('Failed to load orders');
       console.error('Error fetching orders:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchOrders();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchOrders]);
 
   const addItem = (menuItem: MenuItem, restaurantId: string, restaurantName: string) => {
     setItems(prev => {
@@ -128,8 +139,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       clearCart();
       toast.success('Order placed successfully!');
       return order;
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to place order');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to place order';
+      toast.error(message);
       return null;
     } finally {
       setLoading(false);

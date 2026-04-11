@@ -31,8 +31,9 @@ const Login = () => {
         toast.success('Welcome back!');
       }
       navigate('/');
-    } catch (error: any) {
-      toast.error(error.message || 'Authentication failed');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication failed';
+      toast.error(message);
     } finally {
       setLoading(false);
     }

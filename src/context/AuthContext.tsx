@@ -37,23 +37,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string) => {
-    try {
-      const response = await apiService.login({ email, password });
-      setUser(response.user);
-      localStorage.setItem('user', JSON.stringify(response.user));
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiService.login({ email, password });
+    setUser(response.user);
+    localStorage.setItem('user', JSON.stringify(response.user));
   };
 
   const register = async (name: string, email: string, password: string, role = 'customer') => {
-    try {
-      const response = await apiService.register({ name, email, password, role });
-      setUser(response.user);
-      localStorage.setItem('user', JSON.stringify(response.user));
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiService.register({ name, email, password, role });
+    setUser(response.user);
+    localStorage.setItem('user', JSON.stringify(response.user));
   };
 
   const logout = () => {

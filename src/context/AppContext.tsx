@@ -3,6 +3,31 @@ import { Restaurant, MenuItem } from '@/data/types';
 import apiService from '@/services/api';
 import { toast } from 'sonner';
 
+interface RestaurantApiRow {
+  id: string;
+  name: string;
+  cuisine: string[];
+  rating: number;
+  price_range: 1 | 2 | 3;
+  image: string;
+  delivery_time: string;
+  is_veg: boolean;
+  address: string;
+  description: string;
+}
+
+interface MenuItemApiRow {
+  id: string;
+  restaurant_id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  image: string;
+  is_veg: boolean;
+  is_available: boolean;
+}
+
 interface AppContextType {
   restaurants: Restaurant[];
   menuItems: MenuItem[];
@@ -27,9 +52,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchRestaurants = async () => {
     try {
-      const data = await apiService.getRestaurants();
+      const data: RestaurantApiRow[] = await apiService.getRestaurants();
       // Transform backend data to frontend format
-      const transformedData = data.map((r: any) => ({
+      const transformedData: Restaurant[] = data.map((r) => ({
         id: r.id,
         name: r.name,
         cuisine: r.cuisine,
@@ -42,7 +67,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         description: r.description,
       }));
       setRestaurants(transformedData);
-    } catch (error: any) {
+    } catch (error) {
       toast.error('Failed to load restaurants');
       console.error('Error fetching restaurants:', error);
     } finally {
@@ -52,9 +77,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchMenuItems = async (restaurantId: string) => {
     try {
-      const data = await apiService.getMenu(restaurantId);
+      const data: MenuItemApiRow[] = await apiService.getMenu(restaurantId);
       // Transform backend data to frontend format
-      const transformedData = data.map((item: any) => ({
+      const transformedData: MenuItem[] = data.map((item) => ({
         id: item.id,
         restaurantId: item.restaurant_id,
         name: item.name,
@@ -70,7 +95,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         return [...filtered, ...transformedData];
       });
       return transformedData;
-    } catch (error: any) {
+    } catch (error) {
       toast.error('Failed to load menu items');
       console.error('Error fetching menu items:', error);
       return [];

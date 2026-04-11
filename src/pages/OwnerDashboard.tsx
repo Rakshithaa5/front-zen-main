@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useApp } from '@/context/AppContext';
 import { useCart } from '@/context/CartContext';
-import { MenuItem } from '@/data/types';
+import { MenuItem, OrderStatus } from '@/data/types';
 import {
   Dialog,
   DialogContent,
@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-const statusActions: Record<string, { next: string; label: string }> = {
+const statusActions: Record<OrderStatus, { next: OrderStatus; label: string }> = {
   placed: { next: 'accepted', label: 'Accept Order' },
   accepted: { next: 'preparing', label: 'Start Preparing' },
   preparing: { next: 'out_for_delivery', label: 'Send for Delivery' },
@@ -152,7 +152,7 @@ const OwnerDashboard = () => {
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-foreground">${order.total.toFixed(2)}</span>
                         {action && (
-                          <Button size="sm" onClick={() => updateOrderStatus(order.id, action.next as any)} className="gap-1 bg-primary text-primary-foreground hover:bg-primary/90">
+                          <Button size="sm" onClick={() => updateOrderStatus(order.id, action.next)} className="gap-1 bg-primary text-primary-foreground hover:bg-primary/90">
                             <CheckCircle2 className="h-3.5 w-3.5" /> {action.label}
                           </Button>
                         )}

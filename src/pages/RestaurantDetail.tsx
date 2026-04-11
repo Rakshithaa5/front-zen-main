@@ -5,11 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { useApp } from '@/context/AppContext';
 import { useCart } from '@/context/CartContext';
 import { useState, useMemo, useEffect } from 'react';
+import { MenuItem } from '@/data/types';
 
 const RestaurantDetail = () => {
   const { id } = useParams();
   const { restaurants, fetchMenuItems } = useApp();
-  const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const restaurant = restaurants.find(r => r.id === id);
   const categories = [...new Set(menuItems.map(m => m.category))];
