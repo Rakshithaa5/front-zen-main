@@ -55,6 +55,9 @@ interface BackendOrder {
   restaurant_name: string;
   restaurant_id?: string;
   delivery_address?: string;
+  phone_number?: string;
+  coupon_code?: string | null;
+  discount_amount?: number | string;
 }
 
 interface CartContextType {
@@ -67,7 +70,7 @@ interface CartContextType {
   clearCart: () => void;
   getTotal: () => number;
   getItemCount: () => number;
-  placeOrder: (paymentMethod: string, deliveryAddress?: string) => Promise<Order | null>;
+  placeOrder: (paymentMethod: string, deliveryAddress?: string, phoneNumber?: string, couponCode?: string) => Promise<Order | null>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
   fetchOrders: () => Promise<void>;
 }
@@ -167,7 +170,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const getTotal = () => items.reduce((sum, i) => sum + i.menuItem.price * i.quantity, 0);
   const getItemCount = () => items.reduce((sum, i) => sum + i.quantity, 0);
 
-  const placeOrder = async (paymentMethod: string, deliveryAddress = '123 Example Street, City'): Promise<Order | null> => {
+  const placeOrder = async (
+    paymentMethod: string,
+    deliveryAddress = '123 Example Street, City',
+    phoneNumber = '',
+    couponCode = '',
+  ): Promise<Order | null> => {
     if (!isAuthenticated) {
       toast.error('Please login to place an order');
       return null;
@@ -189,6 +197,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         })),
         paymentMethod,
         deliveryAddress,
+        phoneNumber,
+        couponCode: couponCode || undefined,
         restaurantId: items[0].restaurantId,
         restaurantName: items[0].restaurantName,
       };
@@ -206,7 +216,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         createdAt: backendOrder.created_at,
         restaurantName: backendOrder.restaurant_name,
         restaurantId: backendOrder.restaurant_id,
-        deliveryAddress,
+        deliveryAddress: backendOrder.delivery_address || deliveryAddress,
+        phoneNumber: backendOrder.phone_number || phoneNumber || undefined,
+        couponCode: backendOrder.coupon_code || (couponCode || null),
+        discountAmount: Number(backendOrder.discount_amount ?? 0),
       };
 
       setOrders(prev => [order, ...prev]);
