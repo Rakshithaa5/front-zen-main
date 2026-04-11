@@ -2,6 +2,14 @@ import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { ArrowRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import MoodSelector from '@/components/MoodSelector';
 import RestaurantCard from '@/components/RestaurantCard';
 import { useApp } from '@/context/AppContext';
@@ -10,6 +18,8 @@ import { Mood } from '@/data/types';
 
 const Index = () => {
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
+  const [pendingMood, setPendingMood] = useState<Mood | null>(null);
+  const [showMoodAuthPrompt, setShowMoodAuthPrompt] = useState(false);
   const navigate = useNavigate();
   const { restaurants } = useApp();
   const { user, isAuthenticated } = useAuth();
@@ -27,9 +37,19 @@ const Index = () => {
     : restaurants;
 
   const handleMoodSelect = (mood: Mood) => {
+    if (!isAuthenticated) {
+      setPendingMood(mood);
+      setShowMoodAuthPrompt(true);
+      return;
+    }
+
     setSelectedMood(mood);
     navigate(`/mood-recommendations?mood=${encodeURIComponent(mood.label)}`);
   };
+
+  const moodRedirectPath = pendingMood
+    ? `/mood-recommendations?mood=${encodeURIComponent(pendingMood.label)}`
+    : '/mood-recommendations';
 
   return (
     <div className="min-h-screen">
@@ -96,6 +116,33 @@ const Index = () => {
           </div>
         )}
       </section>
+
+      <Dialog open={showMoodAuthPrompt} onOpenChange={setShowMoodAuthPrompt}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Welcome to MoodByte</DialogTitle>
+            <DialogDescription>
+              To unlock mood-based recommendations for {pendingMood?.emoji} {pendingMood?.label}, please log in or create an account.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button variant="outline" onClick={() => setShowMoodAuthPrompt(false)}>
+              Maybe Later
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/login', { state: { mode: 'login', redirectTo: moodRedirectPath } })}
+            >
+              Log In
+            </Button>
+            <Button
+              onClick={() => navigate('/login', { state: { mode: 'register', redirectTo: moodRedirectPath } })}
+            >
+              Sign Up
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
