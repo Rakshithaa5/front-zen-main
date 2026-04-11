@@ -35,13 +35,21 @@ router.post('/login', async (req, res) => {
   if (!email || !password)
     return res.status(400).json({ error: 'email and password are required' });
 
+  const normalizedEmail = String(email).trim().toLowerCase();
+
   const { data: user, error } = await supabase
     .from('users')
     .select('id, name, email, role, password_hash')
-    .eq('email', email)
+    .ilike('email', normalizedEmail)
     .single();
 
-  if (error || !user) return res.status(401).json({ error: 'Invalid credentials' });
+  if (error) {
+    return res.status(500).json({ error: 'Database error while signing in' });
+  }
+
+  if (!user || !user.password_hash) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
 
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
