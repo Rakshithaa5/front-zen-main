@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 *.local
+# Environment secrets
+.env
+.env.*
+backend/.env
 backend/uploads/
 
 # Editor directories and files
