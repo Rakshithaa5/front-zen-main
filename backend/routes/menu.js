@@ -4,6 +4,7 @@ const authMiddleware = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { getRestaurantById, evaluateRestaurantOperationalState } = require('../utils/restaurantAccess');
 
 const uploadDir = path.join(__dirname, '..', 'uploads', 'menu');
 if (!fs.existsSync(uploadDir)) {
@@ -30,9 +31,25 @@ const upload = multer({
 });
 
 // POST /api/menu/upload-image — admin or owner
-router.post('/upload-image', authMiddleware, (req, res) => {
+router.post('/upload-image', authMiddleware, async (req, res) => {
   if (!['admin', 'restaurant_owner'].includes(req.user.role)) {
     return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  if (req.user.role === 'restaurant_owner') {
+    if (!req.user.restaurantId) {
+      return res.status(403).json({ error: 'No restaurant assigned to this account' });
+    }
+
+    const { restaurant, error: restaurantError } = await getRestaurantById(req.user.restaurantId);
+    if (restaurantError || !restaurant) {
+      return res.status(404).json({ error: 'Restaurant not found' });
+    }
+
+    const { isOperational } = evaluateRestaurantOperationalState(restaurant);
+    if (!isOperational) {
+      return res.status(403).json({ error: 'Restaurant is disabled or unverified. Menu changes are blocked.' });
+    }
   }
 
   upload.single('image')(req, res, (err) => {
@@ -60,6 +77,16 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 
     req.body.restaurant_id = req.user.restaurantId;
+
+    const { restaurant, error: restaurantError } = await getRestaurantById(req.user.restaurantId);
+    if (restaurantError || !restaurant) {
+      return res.status(404).json({ error: 'Restaurant not found' });
+    }
+
+    const { isOperational } = evaluateRestaurantOperationalState(restaurant);
+    if (!isOperational) {
+      return res.status(403).json({ error: 'Restaurant is disabled or unverified. Menu changes are blocked.' });
+    }
   }
 
   const { data, error } = await supabase.from('menu_items').insert(req.body).select().single();
@@ -85,6 +112,16 @@ router.put('/:id', authMiddleware, async (req, res) => {
   if (req.user.role === 'restaurant_owner') {
     if (!req.user.restaurantId || existingItem.restaurant_id !== req.user.restaurantId) {
       return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const { restaurant, error: restaurantError } = await getRestaurantById(existingItem.restaurant_id);
+    if (restaurantError || !restaurant) {
+      return res.status(404).json({ error: 'Restaurant not found' });
+    }
+
+    const { isOperational } = evaluateRestaurantOperationalState(restaurant);
+    if (!isOperational) {
+      return res.status(403).json({ error: 'Restaurant is disabled or unverified. Menu changes are blocked.' });
     }
   }
 
@@ -118,6 +155,16 @@ router.patch('/:id/availability', authMiddleware, async (req, res) => {
     if (!req.user.restaurantId || existingItem.restaurant_id !== req.user.restaurantId) {
       return res.status(403).json({ error: 'Forbidden' });
     }
+
+    const { restaurant, error: restaurantError } = await getRestaurantById(existingItem.restaurant_id);
+    if (restaurantError || !restaurant) {
+      return res.status(404).json({ error: 'Restaurant not found' });
+    }
+
+    const { isOperational } = evaluateRestaurantOperationalState(restaurant);
+    if (!isOperational) {
+      return res.status(403).json({ error: 'Restaurant is disabled or unverified. Menu changes are blocked.' });
+    }
   }
 
   const { data, error } = await supabase
@@ -149,6 +196,16 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   if (req.user.role === 'restaurant_owner') {
     if (!req.user.restaurantId || existingItem.restaurant_id !== req.user.restaurantId) {
       return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const { restaurant, error: restaurantError } = await getRestaurantById(existingItem.restaurant_id);
+    if (restaurantError || !restaurant) {
+      return res.status(404).json({ error: 'Restaurant not found' });
+    }
+
+    const { isOperational } = evaluateRestaurantOperationalState(restaurant);
+    if (!isOperational) {
+      return res.status(403).json({ error: 'Restaurant is disabled or unverified. Menu changes are blocked.' });
     }
   }
 

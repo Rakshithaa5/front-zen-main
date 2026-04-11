@@ -192,7 +192,7 @@ const OrderTracking = () => {
                   <Phone className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
                   <div>
                     <p className="font-medium text-foreground">Contact</p>
-                    <p className="text-muted-foreground">+91 98765 43210</p>
+                    <p className="text-muted-foreground">{order.phoneNumber || '+91 98765 43210'}</p>
                   </div>
                 </div>
               </div>
@@ -229,6 +229,18 @@ const OrderTracking = () => {
                   <span className="text-muted-foreground">Transaction ID</span>
                   <span className="font-mono text-xs text-foreground">{order.transactionId}</span>
                 </div>
+                {order.couponCode && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Coupon</span>
+                    <span className="font-semibold text-success">{order.couponCode}</span>
+                  </div>
+                )}
+                {typeof order.discountAmount === 'number' && order.discountAmount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Discount</span>
+                    <span className="font-semibold text-success">-₹{order.discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
                 <Badge className="mt-2 w-full justify-center bg-success/10 text-success hover:bg-success/20">
                   Payment Successful
                 </Badge>

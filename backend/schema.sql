@@ -64,6 +64,9 @@ CREATE TABLE orders (
   payment_method text,
   transaction_id text,
   delivery_address text,
+  phone_number text,
+  coupon_code text,
+  discount_amount numeric(10,2) DEFAULT 0,
   created_at timestamptz DEFAULT now()
 );
 

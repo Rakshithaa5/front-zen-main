@@ -47,6 +47,9 @@ export interface Order {
   restaurantName: string;
   restaurantId?: string;
   deliveryAddress?: string;
+  phoneNumber?: string;
+  couponCode?: string | null;
+  discountAmount?: number;
 }
 
 export type OrderStatus = 'placed' | 'accepted' | 'preparing' | 'out_for_delivery' | 'delivered';

@@ -102,7 +102,6 @@ FROM restaurants r
 LEFT JOIN users u ON u.id = r.owner_id
 ORDER BY r.id;
 
--- 6) Ensure orders are stored in INR.
 ALTER TABLE orders
 ADD COLUMN IF NOT EXISTS currency text;
 
@@ -128,3 +127,13 @@ BEGIN
     ADD CONSTRAINT orders_currency_check CHECK (currency = 'INR');
   END IF;
 END $$;
+
+-- 8) Persist checkout contact and coupon fields used by the updated order flow.
+ALTER TABLE orders
+ADD COLUMN IF NOT EXISTS phone_number text;
+
+ALTER TABLE orders
+ADD COLUMN IF NOT EXISTS coupon_code text;
+
+ALTER TABLE orders
+ADD COLUMN IF NOT EXISTS discount_amount numeric(10,2) DEFAULT 0;

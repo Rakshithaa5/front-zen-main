@@ -1,5 +1,5 @@
 import { ChangeEvent, useMemo, useRef, useState } from 'react';
-import { Trash2, Plus, TrendingUp, ShoppingBag, Store, IndianRupee, Shield, FileCheck2, CheckCircle2, XCircle, Loader2, Pencil, KeyRound, Search } from 'lucide-react';
+import { Trash2, Plus, TrendingUp, ShoppingBag, Store, IndianRupee, Shield, FileCheck2, CheckCircle2, XCircle, Loader2, Pencil, KeyRound, Search, Leaf } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +36,7 @@ const AdminDashboard = () => {
   const [newRestaurant, setNewRestaurant] = useState({
     name: '',
     ownerName: '',
+    servesPureVeg: '',
     cuisine: '',
     location: '',
     description: '',
@@ -259,8 +260,14 @@ const AdminDashboard = () => {
   };
 
   const handleAddRestaurant = async () => {
-    if (!newRestaurant.name.trim() || !newRestaurant.ownerName.trim() || !newRestaurant.cuisine.trim() || !newRestaurant.location.trim()) {
-      toast.error('Restaurant name, owner name, cuisine and location are required');
+    if (
+      !newRestaurant.name.trim()
+      || !newRestaurant.ownerName.trim()
+      || !newRestaurant.servesPureVeg
+      || !newRestaurant.cuisine.trim()
+      || !newRestaurant.location.trim()
+    ) {
+      toast.error('Restaurant name, owner name, pure veg selection, cuisine and location are required');
       return;
     }
 
@@ -275,7 +282,7 @@ const AdminDashboard = () => {
       image: newRestaurant.image.trim() || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600',
       imageGallery: parseList(newRestaurant.imageGallery),
       deliveryTime: '25-35 min',
-      isVeg: false,
+      isVeg: newRestaurant.servesPureVeg === 'yes',
       address: newRestaurant.location.trim(),
       location: newRestaurant.location.trim(),
       description: newRestaurant.description.trim() || `Welcome to ${newRestaurant.name.trim()}`,
@@ -288,6 +295,7 @@ const AdminDashboard = () => {
     setNewRestaurant({
       name: '',
       ownerName: '',
+      servesPureVeg: '',
       cuisine: '',
       location: '',
       description: '',
@@ -493,6 +501,25 @@ const AdminDashboard = () => {
               <div className="space-y-4 pt-4">
                 <Input placeholder="Restaurant Name" value={newRestaurant.name} onChange={e => setNewRestaurant(prev => ({ ...prev, name: e.target.value }))} />
                 <Input placeholder="Restaurant Owner Name" value={newRestaurant.ownerName} onChange={e => setNewRestaurant(prev => ({ ...prev, ownerName: e.target.value }))} />
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">Does this restaurant serve pure veg?</p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={newRestaurant.servesPureVeg === 'yes' ? 'default' : 'outline'}
+                      onClick={() => setNewRestaurant(prev => ({ ...prev, servesPureVeg: 'yes' }))}
+                    >
+                      Yes, Pure Veg
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={newRestaurant.servesPureVeg === 'no' ? 'default' : 'outline'}
+                      onClick={() => setNewRestaurant(prev => ({ ...prev, servesPureVeg: 'no' }))}
+                    >
+                      No
+                    </Button>
+                  </div>
+                </div>
                 <Input placeholder="Cuisines (comma-separated)" value={newRestaurant.cuisine} onChange={e => setNewRestaurant(prev => ({ ...prev, cuisine: e.target.value }))} />
                 <Input placeholder="Location" value={newRestaurant.location} onChange={e => setNewRestaurant(prev => ({ ...prev, location: e.target.value }))} />
                 <Textarea placeholder="Description" value={newRestaurant.description} onChange={e => setNewRestaurant(prev => ({ ...prev, description: e.target.value }))} />
@@ -597,6 +624,9 @@ const AdminDashboard = () => {
                         )}
                         <Badge variant="outline">{r.id}</Badge>
                         <Badge className="bg-success/10 text-success">{r.rating} ★</Badge>
+                        <Badge className={r.isVeg ? 'gap-1 bg-success/10 text-success' : 'gap-1 bg-muted text-muted-foreground'}>
+                          <Leaf className="h-3.5 w-3.5" /> {r.isVeg ? 'Pure Veg' : 'Non-Veg'}
+                        </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">Owner: {r.ownerName || 'Not set'}</p>
                       <p className="text-sm text-muted-foreground">{r.cuisine.join(' • ')}</p>

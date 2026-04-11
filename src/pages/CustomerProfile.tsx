@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, Mail, Phone, MapPin, Edit2, Save, Package, Clock } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Edit2, Save, Package, Clock, TicketPercent, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { useCart } from '@/context/CartContext';
 import { Link } from 'react-router-dom';
 import apiService from '@/services/api';
 import { toast } from 'sonner';
+import { AVAILABLE_COUPONS } from '@/data/coupons';
 
 const CustomerProfile = () => {
   const { user } = useAuth();
@@ -30,6 +31,15 @@ const CustomerProfile = () => {
   const handleSave = () => {
     setEditing(false);
     // TODO: Call API to update profile
+  };
+
+  const copyCoupon = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      toast.success(`${code} copied`);
+    } catch {
+      toast.error('Failed to copy coupon code');
+    }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -143,6 +153,31 @@ const CustomerProfile = () => {
                   />
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-foreground">Available Coupon Codes</h2>
+              <Badge variant="outline" className="gap-1">
+                <TicketPercent className="h-3.5 w-3.5" /> Valid only from this list
+              </Badge>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {AVAILABLE_COUPONS.map((coupon) => (
+                <div key={coupon.code} className="rounded-lg border bg-muted/20 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-foreground">{coupon.code}</p>
+                      <p className="text-sm text-muted-foreground">{coupon.label}</p>
+                    </div>
+                    <Button variant="outline" size="sm" className="gap-1" onClick={() => void copyCoupon(coupon.code)}>
+                      <Copy className="h-3.5 w-3.5" /> Copy
+                    </Button>
+                  </div>
+                  <p className="mt-3 text-sm text-muted-foreground">{coupon.description}</p>
+                </div>
+              ))}
             </div>
           </div>
 

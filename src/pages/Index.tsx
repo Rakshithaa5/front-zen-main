@@ -18,6 +18,10 @@ const Index = () => {
     return <Navigate to="/owner" replace />;
   }
 
+  if (isAuthenticated && user?.role === 'admin') {
+    return <Navigate to="/admin" replace />;
+  }
+
   const filteredRestaurants = selectedMood
     ? restaurants.filter(r => r.cuisine.some(c => selectedMood.categories.includes(c)))
     : restaurants;
