@@ -1,9 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+const defaultIconPrototype = L.Icon.Default.prototype as typeof L.Icon.Default.prototype & {
+  _getIconUrl?: () => string;
+};
+
+delete defaultIconPrototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -23,7 +27,7 @@ const FitBounds = ({ points }: { points: [number, number][] }) => {
   const map = useMap();
   useEffect(() => {
     if (points.length >= 2) map.fitBounds(L.latLngBounds(points), { padding: [50, 50] });
-  }, []);
+  }, [map, points]);
   return null;
 };
 
@@ -50,9 +54,9 @@ interface DeliveryMapProps {
 
 const DeliveryMap = ({ restaurantName, orderStatus = 'placed' }: DeliveryMapProps) => {
   const rOffset = hashOffset(restaurantName);
-  const restaurantPos: [number, number] = [BASE[0] + rOffset[0], BASE[1] + rOffset[1]];
-  const customerPos: [number, number]   = [BASE[0] - rOffset[0] * 0.5 + 0.015, BASE[1] - rOffset[1] * 0.5 + 0.012];
-  const route: [number, number][]       = [restaurantPos, customerPos];
+  const restaurantPos = useMemo<[number, number]>(() => [BASE[0] + rOffset[0], BASE[1] + rOffset[1]], [rOffset]);
+  const customerPos = useMemo<[number, number]>(() => [BASE[0] - rOffset[0] * 0.5 + 0.015, BASE[1] - rOffset[1] * 0.5 + 0.012], [rOffset]);
+  const route = useMemo<[number, number][]>(() => [restaurantPos, customerPos], [customerPos, restaurantPos]);
 
   const [riderPos, setRiderPos] = useState<[number, number]>(restaurantPos);
   const progressRef = useRef(0);
@@ -82,7 +86,7 @@ const DeliveryMap = ({ restaurantName, orderStatus = 'placed' }: DeliveryMapProp
 
     rafRef.current = requestAnimationFrame(animate);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [restaurantName, orderStatus]);
+  }, [customerPos, orderStatus, restaurantPos]);
 
   const isLive = orderStatus === 'out_for_delivery';
   const progress = progressRef.current;

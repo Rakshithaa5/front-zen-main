@@ -203,13 +203,11 @@ const OrderTracking = () => {
               </div>
             </div>
 
-            {order.status !== 'placed' || true ? (
-              <Suspense fallback={
-                <div className="flex h-40 items-center justify-center rounded-xl border bg-card text-sm text-muted-foreground">Loading map...</div>
-              }>
-                <DeliveryMap restaurantName={order.restaurantName} orderStatus={order.status} />
-              </Suspense>
-            ) : null}
+            <Suspense fallback={
+              <div className="flex h-40 items-center justify-center rounded-xl border bg-card text-sm text-muted-foreground">Loading map...</div>
+            }>
+              <DeliveryMap restaurantName={order.restaurantName} orderStatus={order.status} />
+            </Suspense>
 
             <div className="rounded-xl border bg-card p-5 shadow-sm">
               <h3 className="mb-4 font-semibold text-foreground">Order Summary</h3>
