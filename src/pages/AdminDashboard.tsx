@@ -554,7 +554,7 @@ const AdminDashboard = () => {
                 </Button>
                 <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => void handleAddRestaurant()} disabled={savingRestaurant}>
                   {savingRestaurant ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Add Restaurant
+                  Confirm Restaurant
                 </Button>
               </DialogFooter>
             </DialogContent>
