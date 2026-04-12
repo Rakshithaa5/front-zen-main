@@ -54,23 +54,34 @@ jobs:
       - name: Start backend API
         env:
           PORT: 5000
-          JWT_SECRET: ci-jwt-secret-for-health-check
-          SUPABASE_URL: https://example.supabase.co
-          SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-service-role-key
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: npm start --prefix backend > /tmp/backend.log 2>&1 & echo $! > /tmp/backend.pid
 
       - name: Wait for backend health check
         run: |
-          for attempt in {1..30}; do
+          echo "Waiting for backend to start..."
+          for attempt in {1..40}; do
+            echo "Health check attempt $attempt/40..."
             if curl -fsS http://127.0.0.1:5000/api/health; then
+              echo "Backend is healthy!"
               exit 0
             fi
+            
+            if [ $((attempt % 10)) -eq 0 ]; then
+              echo "--- Backend logs (attempt $attempt) ---"
+              tail -20 /tmp/backend.log || true
+              echo "--- End logs ---"
+            fi
 
-            sleep 2
+            sleep 3
           done
 
-          echo "Backend did not become healthy in time"
-          cat /tmp/backend.log
+          echo "Backend health check failed after 120 seconds"
+          echo "--- Final backend logs ---"
+          cat /tmp/backend.log || true
+          echo "--- End logs ---"
           exit 1
 
       - name: Stop backend API

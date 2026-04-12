@@ -494,11 +494,11 @@ const AdminDashboard = () => {
                 <Plus className="h-4 w-4" /> Add Restaurant
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] flex flex-col">
               <DialogHeader>
                 <DialogTitle>Add New Restaurant</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 pt-4">
+              <div className="space-y-4 overflow-y-auto flex-1 pr-4">
                 <Input placeholder="Restaurant Name" value={newRestaurant.name} onChange={e => setNewRestaurant(prev => ({ ...prev, name: e.target.value }))} />
                 <Input placeholder="Restaurant Owner Name" value={newRestaurant.ownerName} onChange={e => setNewRestaurant(prev => ({ ...prev, ownerName: e.target.value }))} />
                 <div className="space-y-2">
@@ -547,10 +547,16 @@ const AdminDashboard = () => {
                   {isUploadingGalleryImage ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   Attach Gallery Image File
                 </Button>
-                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => void handleAddRestaurant()} disabled={savingRestaurant}>
+              </div>
+              <DialogFooter className="mt-6">
+                <Button type="button" variant="outline" onClick={() => setShowAdd(false)}>
+                  Cancel
+                </Button>
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => void handleAddRestaurant()} disabled={savingRestaurant}>
+                  {savingRestaurant ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   Add Restaurant
                 </Button>
-              </div>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
@@ -689,10 +695,16 @@ const AdminDashboard = () => {
                 {isUploadingEditGalleryImage ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Attach Gallery Image File
               </Button>
-              <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => void handleSaveEditedRestaurant()} disabled={savingEditRestaurant}>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditingRestaurant(null)}>
+                Cancel
+              </Button>
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => void handleSaveEditedRestaurant()} disabled={savingEditRestaurant}>
+                {savingEditRestaurant ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Save Changes
               </Button>
-            </div>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
