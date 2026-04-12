@@ -494,11 +494,11 @@ const AdminDashboard = () => {
                 <Plus className="h-4 w-4" /> Add Restaurant
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-h-[90vh] flex flex-col">
-              <DialogHeader>
+            <DialogContent className="max-h-[90vh] flex flex-col overflow-hidden">
+              <DialogHeader className="flex-shrink-0">
                 <DialogTitle>Add New Restaurant</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 overflow-y-auto flex-1 pr-4">
+              <div className="space-y-4 overflow-y-auto flex-1 py-2 pr-1">
                 <Input placeholder="Restaurant Name" value={newRestaurant.name} onChange={e => setNewRestaurant(prev => ({ ...prev, name: e.target.value }))} />
                 <Input placeholder="Restaurant Owner Name" value={newRestaurant.ownerName} onChange={e => setNewRestaurant(prev => ({ ...prev, ownerName: e.target.value }))} />
                 <div className="space-y-2">
@@ -548,7 +548,7 @@ const AdminDashboard = () => {
                   Attach Gallery Image File
                 </Button>
               </div>
-              <DialogFooter className="mt-6">
+              <DialogFooter className="flex-shrink-0 border-t pt-4 mt-2">
                 <Button type="button" variant="outline" onClick={() => setShowAdd(false)}>
                   Cancel
                 </Button>
