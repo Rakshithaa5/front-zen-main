@@ -1,6 +1,7 @@
 services:
   backend:
     image: rakshithaa5/front-zen-backend:latest
+    pull_policy: never
     build:
       context: ./backend
     ports:
@@ -13,6 +14,7 @@ services:
 
   frontend:
     image: rakshithaa5/front-zen-frontend:latest
+    pull_policy: never
     build:
       context: .
       args:

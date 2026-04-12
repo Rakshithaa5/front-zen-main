@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CreditCard, Smartphone, Banknote, CheckCircle2, Building2, Wallet } from 'lucide-react';
+import { CreditCard, Smartphone, Banknote, CheckCircle2, Building2, Wallet, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,49 +10,79 @@ import { toast } from 'sonner';
 import { AVAILABLE_COUPONS } from '@/data/coupons';
 
 const paymentMethods = [
-  { 
-    id: 'upi', 
-    label: 'UPI', 
-    icon: Smartphone,
-    description: 'Pay via Google Pay, PhonePe, Paytm',
-    fields: ['upiId']
-  },
-  { 
-    id: 'card', 
-    label: 'Credit/Debit Card', 
-    icon: CreditCard,
-    description: 'Visa, Mastercard, Amex accepted',
-    fields: ['cardNumber', 'cardName', 'expiry', 'cvv']
-  },
-  { 
-    id: 'netbanking', 
-    label: 'Net Banking', 
-    icon: Building2,
-    description: 'All major banks supported',
-    fields: ['bank']
-  },
-  { 
-    id: 'wallet', 
-    label: 'Wallet', 
-    icon: Wallet,
-    description: 'Paytm, PhonePe, Amazon Pay',
-    fields: ['walletType']
-  },
-  { 
-    id: 'cod', 
-    label: 'Cash on Delivery', 
-    icon: Banknote,
-    description: 'Pay when you receive',
-    fields: []
-  },
+  { id: 'upi',        label: 'UPI',                icon: Smartphone, description: 'Google Pay, PhonePe, Paytm' },
+  { id: 'card',       label: 'Credit / Debit Card', icon: CreditCard, description: 'Visa, Mastercard, Amex' },
+  { id: 'netbanking', label: 'Net Banking',          icon: Building2,  description: 'All major banks supported' },
+  { id: 'wallet',     label: 'Wallet',               icon: Wallet,     description: 'Paytm, PhonePe, Amazon Pay' },
+  { id: 'cod',        label: 'Cash on Delivery',     icon: Banknote,   description: 'Pay when you receive' },
 ];
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+const formatCardNumber = (v: string) =>
+  v.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
+
+const formatExpiry = (v: string) => {
+  const digits = v.replace(/\D/g, '').slice(0, 4);
+  if (digits.length >= 3) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return digits;
+};
+
+const getCardType = (num: string): string => {
+  const n = num.replace(/\s/g, '');
+  if (/^4/.test(n)) return 'Visa';
+  if (/^5[1-5]/.test(n)) return 'Mastercard';
+  if (/^3[47]/.test(n)) return 'Amex';
+  if (/^6/.test(n)) return 'RuPay';
+  return '';
+};
+
+// ── validators ───────────────────────────────────────────────────────────────
+
+const validateUpi = (id: string) => /^[\w.\-]{2,256}@[a-zA-Z]{2,64}$/.test(id.trim());
+
+const validateCard = (num: string) => {
+  const digits = num.replace(/\s/g, '');
+  if (digits.length < 13 || digits.length > 19) return false;
+  // Luhn check
+  let sum = 0;
+  let alt = false;
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let n = parseInt(digits[i], 10);
+    if (alt) { n *= 2; if (n > 9) n -= 9; }
+    sum += n;
+    alt = !alt;
+  }
+  return sum % 10 === 0;
+};
+
+const validateExpiry = (exp: string) => {
+  const [mm, yy] = exp.split('/');
+  if (!mm || !yy || mm.length !== 2 || yy.length !== 2) return false;
+  const month = parseInt(mm, 10);
+  const year = 2000 + parseInt(yy, 10);
+  if (month < 1 || month > 12) return false;
+  const now = new Date();
+  return new Date(year, month - 1) >= new Date(now.getFullYear(), now.getMonth());
+};
+
+const validatePhone = (p: string) => /^[6-9]\d{9}$/.test(p);
+
+// ── component ─────────────────────────────────────────────────────────────────
+
+const Err = ({ msg }: { msg: string }) => (
+  <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
+    <AlertCircle className="h-3 w-3" /> {msg}
+  </p>
+);
 
 const Checkout = () => {
   const [payment, setPayment] = useState('upi');
-  const [address, setAddress] = useState('123 Example Street, City');
+  const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [paymentDetails, setPaymentDetails] = useState({
     upiId: '',
     cardNumber: '',
@@ -60,59 +90,94 @@ const Checkout = () => {
     expiry: '',
     cvv: '',
     bank: '',
-    walletType: ''
+    walletType: '',
   });
-  
+
   const { getTotal, placeOrder, items } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  
+
   const subtotal = getTotal();
-  const deliveryFee = 2.99;
+  const deliveryFee = 49;
   const tax = subtotal * 0.05;
-  const activeCoupon = AVAILABLE_COUPONS.find(coupon => coupon.code === appliedCoupon) || null;
+  const activeCoupon = AVAILABLE_COUPONS.find(c => c.code === appliedCoupon) || null;
   const couponDiscount = activeCoupon
-    ? (activeCoupon.discountType === 'percentage'
+    ? activeCoupon.discountType === 'percentage'
       ? subtotal * (activeCoupon.discountValue / 100)
-      : activeCoupon.discountValue)
+      : activeCoupon.discountValue
     : 0;
-  const discountedSubtotal = Math.max(subtotal - couponDiscount, 0);
-  const total = discountedSubtotal + deliveryFee + tax;
+  const total = Math.max(subtotal - couponDiscount, 0) + deliveryFee + tax;
 
-  if (!isAuthenticated) {
-    navigate('/login');
-    return null;
+  if (!isAuthenticated) { navigate('/login'); return null; }
+  if (items.length === 0) { navigate('/cart'); return null; }
+
+  const cardType = getCardType(paymentDetails.cardNumber);
+
+  // ── field errors ────────────────────────────────────────────────────────────
+  const errors: Record<string, string> = {};
+
+  if (touched.phone && !validatePhone(phone))
+    errors.phone = 'Enter a valid 10-digit Indian mobile number';
+  if (touched.address && !address.trim())
+    errors.address = 'Delivery address is required';
+
+  if (payment === 'upi' && touched.upiId) {
+    if (!paymentDetails.upiId) errors.upiId = 'UPI ID is required';
+    else if (!validateUpi(paymentDetails.upiId)) errors.upiId = 'Invalid UPI ID (e.g. name@upi)';
   }
-
-  if (items.length === 0) {
-    navigate('/cart');
-    return null;
+  if (payment === 'card') {
+    if (touched.cardNumber) {
+      if (!paymentDetails.cardNumber) errors.cardNumber = 'Card number is required';
+      else if (!validateCard(paymentDetails.cardNumber)) errors.cardNumber = 'Invalid card number';
+    }
+    if (touched.cardName && !paymentDetails.cardName.trim())
+      errors.cardName = 'Cardholder name is required';
+    if (touched.expiry) {
+      if (!paymentDetails.expiry) errors.expiry = 'Expiry is required';
+      else if (!validateExpiry(paymentDetails.expiry)) errors.expiry = 'Card is expired or invalid';
+    }
+    if (touched.cvv) {
+      if (!paymentDetails.cvv) errors.cvv = 'CVV is required';
+      else if (paymentDetails.cvv.length < 3) errors.cvv = 'CVV must be 3–4 digits';
+    }
   }
+  if (payment === 'netbanking' && touched.bank && !paymentDetails.bank)
+    errors.bank = 'Please select a bank';
+  if (payment === 'wallet' && touched.walletType && !paymentDetails.walletType)
+    errors.walletType = 'Please select a wallet';
 
-  const selectedMethod = paymentMethods.find(m => m.id === payment);
+  const touch = (field: string) => setTouched(prev => ({ ...prev, [field]: true }));
+  const pd = (field: string, value: string) =>
+    setPaymentDetails(prev => ({ ...prev, [field]: value }));
 
+  // ── submit ──────────────────────────────────────────────────────────────────
   const handlePlace = async () => {
-    if (!phone || phone.length < 10) {
-      toast.error('Please enter a valid phone number');
-      return;
-    }
+    // Touch all relevant fields
+    const allFields: Record<string, boolean> = { phone: true, address: true };
+    if (payment === 'upi') allFields.upiId = true;
+    if (payment === 'card') { allFields.cardNumber = true; allFields.cardName = true; allFields.expiry = true; allFields.cvv = true; }
+    if (payment === 'netbanking') allFields.bank = true;
+    if (payment === 'wallet') allFields.walletType = true;
+    setTouched(prev => ({ ...prev, ...allFields }));
 
-    if (payment !== 'cod') {
-      const requiredFields = selectedMethod?.fields || [];
-      const missingFields = requiredFields.filter(field => !paymentDetails[field as keyof typeof paymentDetails]);
-      if (missingFields.length > 0) {
-        toast.error('Please fill in all payment details');
-        return;
-      }
+    if (!validatePhone(phone)) { toast.error('Enter a valid phone number'); return; }
+    if (!address.trim()) { toast.error('Enter a delivery address'); return; }
+
+    if (payment === 'upi' && !validateUpi(paymentDetails.upiId)) { toast.error('Invalid UPI ID'); return; }
+    if (payment === 'card') {
+      if (!validateCard(paymentDetails.cardNumber)) { toast.error('Invalid card number'); return; }
+      if (!paymentDetails.cardName.trim()) { toast.error('Enter cardholder name'); return; }
+      if (!validateExpiry(paymentDetails.expiry)) { toast.error('Card is expired or invalid'); return; }
+      if (paymentDetails.cvv.length < 3) { toast.error('Invalid CVV'); return; }
     }
+    if (payment === 'netbanking' && !paymentDetails.bank) { toast.error('Select a bank'); return; }
+    if (payment === 'wallet' && !paymentDetails.walletType) { toast.error('Select a wallet'); return; }
 
     setProcessing(true);
     try {
-      const order = await placeOrder(payment, address, phone, appliedCoupon);
-      if (order) {
-        navigate(`/order/${order.id}`);
-      }
-    } catch (error) {
+      const order = await placeOrder(payment, address);
+      if (order) navigate(`/order/${order.id}`);
+    } catch {
       toast.error('Failed to place order');
     } finally {
       setProcessing(false);
@@ -125,77 +190,72 @@ const Checkout = () => {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
-          {/* Delivery Details */}
+
+          {/* Delivery */}
           <div className="rounded-xl border bg-card p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-semibold text-foreground">Delivery Details</h2>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="address" className="text-sm font-medium">Delivery Address</Label>
-                <Input 
+                <Label htmlFor="address">Delivery Address</Label>
+                <Input
                   id="address"
-                  placeholder="Enter your complete address" 
+                  placeholder="House no., Street, Area, City"
                   value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="mt-1.5"
+                  onChange={e => setAddress(e.target.value)}
+                  onBlur={() => touch('address')}
+                  className={`mt-1.5 ${errors.address ? 'border-destructive' : ''}`}
                 />
+                {errors.address && <Err msg={errors.address} />}
               </div>
               <div>
-                <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
-                <Input 
-                  id="phone"
-                  type="tel"
-                  placeholder="Enter 10-digit mobile number" 
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="mt-1.5"
-                  maxLength={10}
-                />
+                <Label htmlFor="phone">Phone Number</Label>
+                <div className="relative mt-1.5">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">+91</span>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="98765 43210"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    onBlur={() => touch('phone')}
+                    className={`pl-12 ${errors.phone ? 'border-destructive' : ''}`}
+                  />
+                </div>
+                {errors.phone && <Err msg={errors.phone} />}
               </div>
-              <div>
-                <Label htmlFor="coupon" className="text-sm font-medium">Coupon Code</Label>
-                <p className="mt-1.5 text-xs text-muted-foreground">Pick one of the available coupons below. Only listed codes are valid.</p>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  {AVAILABLE_COUPONS.map((coupon) => {
-                    const isSelected = appliedCoupon === coupon.code;
 
+              {/* Coupons */}
+              <div>
+                <Label>Coupon Code</Label>
+                <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                  {AVAILABLE_COUPONS.map(coupon => {
+                    const selected = appliedCoupon === coupon.code;
                     return (
                       <button
                         key={coupon.code}
                         type="button"
-                        onClick={() => {
-                          setAppliedCoupon(coupon.code);
-                          toast.success(`${coupon.code} applied`);
-                        }}
-                        className={`rounded-xl border p-4 text-left transition-all ${
-                          isSelected
-                            ? 'border-primary bg-primary/5 shadow-sm'
-                            : 'border-border hover:border-primary/40 hover:bg-accent/5'
-                        }`}
+                        onClick={() => { setAppliedCoupon(selected ? '' : coupon.code); toast.success(selected ? 'Coupon removed' : `${coupon.code} applied`); }}
+                        className={`rounded-xl border p-4 text-left transition-all ${selected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}
                       >
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start justify-between gap-2">
                           <div>
                             <p className="font-semibold text-foreground">{coupon.code}</p>
-                            <p className="text-sm text-muted-foreground">{coupon.label}</p>
+                            <p className="text-xs text-muted-foreground">{coupon.label}</p>
                           </div>
-                          <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium text-foreground">
+                          <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium">
                             {coupon.discountType === 'percentage' ? `${coupon.discountValue}% off` : `₹${coupon.discountValue} off`}
                           </span>
                         </div>
-                        <p className="mt-3 text-sm text-muted-foreground">{coupon.description}</p>
+                        <p className="mt-2 text-xs text-muted-foreground">{coupon.description}</p>
                       </button>
                     );
                   })}
                 </div>
-                {appliedCoupon ? (
-                  <p className="mt-3 text-xs font-medium text-success">Applied coupon: {appliedCoupon}</p>
-                ) : (
-                  <p className="mt-3 text-xs text-muted-foreground">No coupon selected.</p>
-                )}
               </div>
             </div>
           </div>
 
-          {/* Payment Method */}
+          {/* Payment */}
           <div className="rounded-xl border bg-card p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-semibold text-foreground">Payment Method</h2>
             <div className="space-y-3">
@@ -204,14 +264,10 @@ const Checkout = () => {
                   key={m.id}
                   onClick={() => setPayment(m.id)}
                   className={`flex w-full items-start gap-4 rounded-lg border p-4 text-left transition-all ${
-                    payment === m.id 
-                      ? 'border-primary bg-primary/5 shadow-sm' 
-                      : 'border-border hover:border-primary/40 hover:bg-accent/5'
+                    payment === m.id ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/40'
                   }`}
                 >
-                  <div className={`mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
-                    payment === m.id ? 'bg-primary/10' : 'bg-muted'
-                  }`}>
+                  <div className={`mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${payment === m.id ? 'bg-primary/10' : 'bg-muted'}`}>
                     <m.icon className={`h-5 w-5 ${payment === m.id ? 'text-primary' : 'text-muted-foreground'}`} />
                   </div>
                   <div className="flex-1">
@@ -225,74 +281,112 @@ const Checkout = () => {
               ))}
             </div>
 
-            {/* Payment Details Form */}
+            {/* UPI */}
             {payment === 'upi' && (
-              <div className="mt-4 space-y-3 rounded-lg bg-accent/5 p-4">
-                <Label htmlFor="upiId" className="text-sm font-medium">UPI ID</Label>
-                <Input 
+              <div className="mt-4 rounded-lg bg-accent/5 p-4 space-y-2">
+                <Label htmlFor="upiId">UPI ID</Label>
+                <Input
                   id="upiId"
-                  placeholder="yourname@upi" 
+                  placeholder="yourname@okaxis"
                   value={paymentDetails.upiId}
-                  onChange={(e) => setPaymentDetails({...paymentDetails, upiId: e.target.value})}
+                  onChange={e => pd('upiId', e.target.value)}
+                  onBlur={() => touch('upiId')}
+                  className={errors.upiId ? 'border-destructive' : ''}
                 />
+                {errors.upiId
+                  ? <Err msg={errors.upiId} />
+                  : paymentDetails.upiId && validateUpi(paymentDetails.upiId) && (
+                    <p className="flex items-center gap-1 text-xs text-success"><CheckCircle2 className="h-3 w-3" /> Valid UPI ID</p>
+                  )
+                }
+                <p className="text-xs text-muted-foreground">Accepted: @okaxis, @oksbi, @ybl, @paytm, @upi, etc.</p>
               </div>
             )}
 
+            {/* Card */}
             {payment === 'card' && (
-              <div className="mt-4 space-y-3 rounded-lg bg-accent/5 p-4">
+              <div className="mt-4 rounded-lg bg-accent/5 p-4 space-y-4">
                 <div>
-                  <Label htmlFor="cardNumber" className="text-sm font-medium">Card Number</Label>
-                  <Input 
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="cardNumber">Card Number</Label>
+                    {cardType && <span className="text-xs font-semibold text-primary">{cardType}</span>}
+                  </div>
+                  <Input
                     id="cardNumber"
-                    placeholder="1234 5678 9012 3456" 
+                    placeholder="1234 5678 9012 3456"
                     value={paymentDetails.cardNumber}
-                    onChange={(e) => setPaymentDetails({...paymentDetails, cardNumber: e.target.value})}
+                    onChange={e => pd('cardNumber', formatCardNumber(e.target.value))}
+                    onBlur={() => touch('cardNumber')}
+                    className={`mt-1.5 font-mono tracking-widest ${errors.cardNumber ? 'border-destructive' : ''}`}
                     maxLength={19}
                   />
+                  {errors.cardNumber
+                    ? <Err msg={errors.cardNumber} />
+                    : paymentDetails.cardNumber.replace(/\s/g, '').length === 16 && validateCard(paymentDetails.cardNumber) && (
+                      <p className="mt-1 flex items-center gap-1 text-xs text-success"><CheckCircle2 className="h-3 w-3" /> Valid card</p>
+                    )
+                  }
                 </div>
+
                 <div>
-                  <Label htmlFor="cardName" className="text-sm font-medium">Cardholder Name</Label>
-                  <Input 
+                  <Label htmlFor="cardName">Cardholder Name</Label>
+                  <Input
                     id="cardName"
-                    placeholder="Name on card" 
+                    placeholder="As printed on card"
                     value={paymentDetails.cardName}
-                    onChange={(e) => setPaymentDetails({...paymentDetails, cardName: e.target.value})}
+                    onChange={e => pd('cardName', e.target.value.toUpperCase())}
+                    onBlur={() => touch('cardName')}
+                    className={`mt-1.5 uppercase tracking-wide ${errors.cardName ? 'border-destructive' : ''}`}
                   />
+                  {errors.cardName && <Err msg={errors.cardName} />}
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="expiry" className="text-sm font-medium">Expiry</Label>
-                    <Input 
+                    <Label htmlFor="expiry">Expiry (MM/YY)</Label>
+                    <Input
                       id="expiry"
-                      placeholder="MM/YY" 
+                      placeholder="MM/YY"
                       value={paymentDetails.expiry}
-                      onChange={(e) => setPaymentDetails({...paymentDetails, expiry: e.target.value})}
+                      onChange={e => pd('expiry', formatExpiry(e.target.value))}
+                      onBlur={() => touch('expiry')}
+                      className={`mt-1.5 font-mono ${errors.expiry ? 'border-destructive' : ''}`}
                       maxLength={5}
                     />
+                    {errors.expiry
+                      ? <Err msg={errors.expiry} />
+                      : paymentDetails.expiry.length === 5 && validateExpiry(paymentDetails.expiry) && (
+                        <p className="mt-1 flex items-center gap-1 text-xs text-success"><CheckCircle2 className="h-3 w-3" /> Valid</p>
+                      )
+                    }
                   </div>
                   <div>
-                    <Label htmlFor="cvv" className="text-sm font-medium">CVV</Label>
-                    <Input 
+                    <Label htmlFor="cvv">CVV</Label>
+                    <Input
                       id="cvv"
                       type="password"
-                      placeholder="123" 
+                      placeholder={cardType === 'Amex' ? '4 digits' : '3 digits'}
                       value={paymentDetails.cvv}
-                      onChange={(e) => setPaymentDetails({...paymentDetails, cvv: e.target.value})}
-                      maxLength={3}
+                      onChange={e => pd('cvv', e.target.value.replace(/\D/g, '').slice(0, cardType === 'Amex' ? 4 : 3))}
+                      onBlur={() => touch('cvv')}
+                      className={`mt-1.5 ${errors.cvv ? 'border-destructive' : ''}`}
+                      maxLength={cardType === 'Amex' ? 4 : 3}
                     />
+                    {errors.cvv && <Err msg={errors.cvv} />}
                   </div>
                 </div>
               </div>
             )}
 
+            {/* Net Banking */}
             {payment === 'netbanking' && (
-              <div className="mt-4 space-y-3 rounded-lg bg-accent/5 p-4">
-                <Label htmlFor="bank" className="text-sm font-medium">Select Bank</Label>
-                <select 
+              <div className="mt-4 rounded-lg bg-accent/5 p-4 space-y-2">
+                <Label htmlFor="bank">Select Bank</Label>
+                <select
                   id="bank"
                   value={paymentDetails.bank}
-                  onChange={(e) => setPaymentDetails({...paymentDetails, bank: e.target.value})}
-                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
+                  onChange={e => { pd('bank', e.target.value); touch('bank'); }}
+                  className={`mt-1.5 w-full rounded-lg border bg-background px-3 py-2 text-sm ${errors.bank ? 'border-destructive' : ''}`}
                 >
                   <option value="">Choose your bank</option>
                   <option value="hdfc">HDFC Bank</option>
@@ -300,25 +394,50 @@ const Checkout = () => {
                   <option value="sbi">State Bank of India</option>
                   <option value="axis">Axis Bank</option>
                   <option value="kotak">Kotak Mahindra Bank</option>
+                  <option value="pnb">Punjab National Bank</option>
+                  <option value="bob">Bank of Baroda</option>
+                  <option value="idfc">IDFC First Bank</option>
+                  <option value="yes">Yes Bank</option>
+                  <option value="indusind">IndusInd Bank</option>
                 </select>
+                {errors.bank && <Err msg={errors.bank} />}
               </div>
             )}
 
+            {/* Wallet */}
             {payment === 'wallet' && (
-              <div className="mt-4 space-y-3 rounded-lg bg-accent/5 p-4">
-                <Label htmlFor="walletType" className="text-sm font-medium">Select Wallet</Label>
-                <select 
-                  id="walletType"
-                  value={paymentDetails.walletType}
-                  onChange={(e) => setPaymentDetails({...paymentDetails, walletType: e.target.value})}
-                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
-                >
-                  <option value="">Choose wallet</option>
-                  <option value="paytm">Paytm</option>
-                  <option value="phonepe">PhonePe</option>
-                  <option value="amazonpay">Amazon Pay</option>
-                  <option value="mobikwik">Mobikwik</option>
-                </select>
+              <div className="mt-4 rounded-lg bg-accent/5 p-4 space-y-2">
+                <Label>Select Wallet</Label>
+                <div className="mt-2 grid grid-cols-2 gap-3">
+                  {[
+                    { id: 'paytm', label: 'Paytm' },
+                    { id: 'phonepe', label: 'PhonePe' },
+                    { id: 'amazonpay', label: 'Amazon Pay' },
+                    { id: 'mobikwik', label: 'MobiKwik' },
+                  ].map(w => (
+                    <button
+                      key={w.id}
+                      type="button"
+                      onClick={() => { pd('walletType', w.id); touch('walletType'); }}
+                      className={`rounded-lg border p-3 text-sm font-medium transition-all ${
+                        paymentDetails.walletType === w.id
+                          ? 'border-primary bg-primary/5 text-primary'
+                          : 'border-border hover:border-primary/40 text-foreground'
+                      }`}
+                    >
+                      {w.label}
+                    </button>
+                  ))}
+                </div>
+                {errors.walletType && <Err msg={errors.walletType} />}
+              </div>
+            )}
+
+            {/* COD notice */}
+            {payment === 'cod' && (
+              <div className="mt-4 rounded-lg bg-warning/10 border border-warning/20 p-4">
+                <p className="text-sm font-medium text-warning">Cash on Delivery</p>
+                <p className="mt-1 text-xs text-muted-foreground">Please keep exact change ready. Our delivery partner will collect payment on arrival.</p>
               </div>
             )}
           </div>
@@ -328,16 +447,12 @@ const Checkout = () => {
         <div className="lg:col-span-1">
           <div className="sticky top-20 rounded-xl border bg-card p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-semibold text-foreground">Order Summary</h2>
-            
-            <div className="space-y-3 border-b pb-4">
+
+            <div className="space-y-2 border-b pb-4">
               {items.map(item => (
                 <div key={item.menuItem.id} className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {item.menuItem.name} × {item.quantity}
-                  </span>
-                  <span className="font-medium text-foreground">
-                    ₹{(item.menuItem.price * item.quantity).toFixed(2)}
-                  </span>
+                  <span className="text-muted-foreground">{item.menuItem.name} × {item.quantity}</span>
+                  <span className="font-medium text-foreground">₹{(item.menuItem.price * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
             </div>
@@ -345,24 +460,26 @@ const Checkout = () => {
             <div className="space-y-2 border-b py-4 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span className="text-foreground">₹{subtotal.toFixed(2)}</span>
+                <span>₹{subtotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Coupon Discount</span>
-                <span className="text-success">-₹{couponDiscount.toFixed(2)}</span>
-              </div>
+              {couponDiscount > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-success">Coupon ({appliedCoupon})</span>
+                  <span className="text-success">-₹{couponDiscount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Delivery Fee</span>
-                <span className="text-foreground">₹{deliveryFee.toFixed(2)}</span>
+                <span>₹{deliveryFee.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Tax (5%)</span>
-                <span className="text-foreground">₹{tax.toFixed(2)}</span>
+                <span>₹{tax.toFixed(2)}</span>
               </div>
             </div>
 
             <div className="flex justify-between pt-4 text-lg font-bold">
-              <span className="text-foreground">Total</span>
+              <span>Total</span>
               <span className="text-primary">₹{total.toFixed(2)}</span>
             </div>
 
@@ -372,7 +489,7 @@ const Checkout = () => {
               onClick={handlePlace}
               disabled={processing}
             >
-              {processing ? 'Processing Payment...' : `Place Order • ₹${total.toFixed(2)}`}
+              {processing ? 'Processing...' : `Place Order • ₹${total.toFixed(2)}`}
             </Button>
 
             <p className="mt-3 text-center text-xs text-muted-foreground">
