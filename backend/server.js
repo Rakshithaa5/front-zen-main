@@ -68,15 +68,37 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Health check available at http://localhost:${PORT}/api/health`);
-});
+const BASE_PORT = Number(process.env.PORT) || 5000;
+const MAX_PORT_ATTEMPTS = 10;
+let server;
+
+function startServer(port, attempt = 0) {
+  server = app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+    console.log(`Health check available at http://localhost:${port}/api/health`);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE' && attempt < MAX_PORT_ATTEMPTS) {
+      const nextPort = port + 1;
+      console.warn(`Port ${port} is in use, retrying on ${nextPort}...`);
+      return startServer(nextPort, attempt + 1);
+    }
+
+    console.error('Failed to start server:', err.message);
+    process.exit(1);
+  });
+}
+
+startServer(BASE_PORT);
 
 // Handle graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM signal received: closing HTTP server');
+  if (!server) {
+    process.exit(0);
+  }
+
   server.close(() => {
     console.log('HTTP server closed');
     process.exit(0);

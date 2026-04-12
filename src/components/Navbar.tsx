@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { ShoppingCart, User, UtensilsCrossed, Shield, ChefHat, LogOut, Sparkles, UserCircle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import CartPreview from '@/components/CartPreview';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,12 +15,23 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const Navbar = () => {
-  const { getItemCount } = useCart();
+  const { getItemCount, items } = useCart();
   const { user, logout, isAuthenticated } = useAuth();
   const count = getItemCount();
+  const [cartOpen, setCartOpen] = useState(false);
+
+  // Auto-open preview when item is added
+  useEffect(() => {
+    if (items.length > 0) {
+      setCartOpen(true);
+      const t = setTimeout(() => setCartOpen(false), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [items.reduce((s, i) => s + i.quantity, 0)]);
 
   return (
-    <nav className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
+    <>
+      <nav className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <UtensilsCrossed className="h-7 w-7 text-primary" />
@@ -59,16 +72,18 @@ const Navbar = () => {
 
         <div className="flex items-center gap-3">
           {isAuthenticated && user?.role === 'customer' && (
-            <Link to="/cart">
-              <Button variant="ghost" size="icon" className="relative">
-                <ShoppingCart className="h-5 w-5" />
-                {count > 0 && (
-                  <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
-                    {count}
-                  </Badge>
-                )}
+            <button onClick={() => setCartOpen(true)}>
+              <Button variant="ghost" size="icon" className="relative" asChild>
+                <span>
+                  <ShoppingCart className="h-5 w-5" />
+                  {count > 0 && (
+                    <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
+                      {count}
+                    </Badge>
+                  )}
+                </span>
               </Button>
-            </Link>
+            </button>
           )}
           
           {isAuthenticated ? (
@@ -119,6 +134,8 @@ const Navbar = () => {
         </div>
       </div>
     </nav>
+      <CartPreview open={cartOpen} onClose={() => setCartOpen(false)} />
+    </>
   );
 };
 
