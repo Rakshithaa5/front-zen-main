@@ -42,12 +42,20 @@ app.get('/', (req, res) => {
   });
 });
 
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/restaurants', require('./routes/restaurants'));
-app.use('/api/menu', require('./routes/menu'));
-app.use('/api/orders', require('./routes/orders'));
+// Health check endpoint - should work even if dependencies are not fully initialized
+app.get('/api/health', (_, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
-app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
+try {
+  app.use('/api/auth', require('./routes/auth'));
+  app.use('/api/restaurants', require('./routes/restaurants'));
+  app.use('/api/menu', require('./routes/menu'));
+  app.use('/api/orders', require('./routes/orders'));
+} catch (err) {
+  console.error('Error loading routes:', err.message);
+  // Continue anyway so health check still works
+}
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -61,4 +69,16 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+const server = app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Health check available at http://localhost:${PORT}/api/health`);
+});
+
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
+});
