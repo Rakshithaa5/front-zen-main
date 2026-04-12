@@ -43,3 +43,6 @@ Run the Supabase seed or schema script to create the admin and owner users.
 | Falafel Farm     | Omar Hassan          | falafelfarm@moodbyte.com     | Owner@123 |
 | Crisp Corner     | Nina Cruz            | crispcorner@moodbyte.com     | Owner@123 |
  squareburgers1@moodbyte.com 5NTnA5uJPyRY
+ Name: Mr
+Email: pastastreet@moodbyte.com
+Password: Uonqgn#NV!Lo
