@@ -54,9 +54,9 @@ jobs:
       - name: Start backend API
         env:
           PORT: 5000
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          JWT_SECRET: ci-jwt-secret
+          SUPABASE_URL: https://placeholder.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-key
         run: npm start --prefix backend > /tmp/backend.log 2>&1 & echo $! > /tmp/backend.pid
 
       - name: Wait for backend health check
