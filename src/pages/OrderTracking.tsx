@@ -3,7 +3,6 @@ import { useEffect, useState, lazy, Suspense } from 'react';
 import { CheckCircle2, Package, ChefHat, Truck, PartyPopper, Clock, MapPin, Phone, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { useCart } from '@/context/CartContext';
 import { OrderStatus } from '@/data/types';
 import { toast } from 'sonner';
@@ -35,7 +34,6 @@ const OrderTracking = () => {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
-  const [review, setReview] = useState('');
   const [rated, setRated] = useState(false);
 
   useEffect(() => {
@@ -216,13 +214,6 @@ const OrderTracking = () => {
                           </span>
                         )}
                       </div>
-                      <Textarea
-                        placeholder="Write a review (optional)"
-                        value={review}
-                        onChange={e => setReview(e.target.value)}
-                        rows={2}
-                        className="mb-4 resize-none"
-                      />
                       <Button
                         className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                         disabled={rating === 0}

@@ -199,6 +199,15 @@ class ApiService {
       body: { status },
     });
   }
+
+  // Reviews
+  async submitReview(data) {
+    return this.request('/reviews', { method: 'POST', body: data });
+  }
+
+  async getReviews(restaurantId) {
+    return this.request(`/reviews/${restaurantId}`);
+  }
 }
 
 export default new ApiService();
