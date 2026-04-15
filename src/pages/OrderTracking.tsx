@@ -1,10 +1,12 @@
 import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { CheckCircle2, Package, ChefHat, Truck, PartyPopper, Clock, MapPin, Phone } from 'lucide-react';
+import { CheckCircle2, Package, ChefHat, Truck, PartyPopper, Clock, MapPin, Phone, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { useCart } from '@/context/CartContext';
 import { OrderStatus } from '@/data/types';
+import { toast } from 'sonner';
 
 const DeliveryMap = lazy(() => import('@/components/DeliveryMap'));
 
@@ -31,6 +33,10 @@ const OrderTracking = () => {
   const orderStatus = order?.status;
   const orderCreatedAt = order?.createdAt;
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(0);
+  const [review, setReview] = useState('');
+  const [rated, setRated] = useState(false);
 
   useEffect(() => {
     if (!orderId || !orderStatus || !orderCreatedAt) return;
@@ -167,15 +173,65 @@ const OrderTracking = () => {
               </div>
 
               {isDelivered && (
-                <div className="mt-8 rounded-xl bg-success/10 p-5 text-center border border-success/20">
-                  <PartyPopper className="mx-auto mb-2 h-10 w-10 text-success" />
-                  <p className="text-lg font-bold text-success">Thank you for ordering with MoodByte!</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Hope you enjoyed your meal 😊</p>
-                  <Link to="/restaurants" className="mt-4 inline-block">
-                    <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                      Order Again
-                    </Button>
-                  </Link>
+                <div className="mt-8 space-y-4">
+                  <div className="rounded-xl bg-success/10 p-5 text-center border border-success/20">
+                    <PartyPopper className="mx-auto mb-2 h-10 w-10 text-success" />
+                    <p className="text-lg font-bold text-success">Thank you for ordering with MoodByte!</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Hope you enjoyed your meal 😊</p>
+                    <Link to="/restaurants" className="mt-4 inline-block">
+                      <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">Order Again</Button>
+                    </Link>
+                  </div>
+
+                  {/* Rating */}
+                  {rated ? (
+                    <div className="rounded-xl border bg-card p-5 text-center shadow-sm">
+                      <div className="flex justify-center gap-1 mb-2">
+                        {[1,2,3,4,5].map(s => (
+                          <Star key={s} className={`h-6 w-6 ${s <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`} />
+                        ))}
+                      </div>
+                      <p className="font-semibold text-foreground">Thanks for your feedback!</p>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border bg-card p-5 shadow-sm">
+                      <h3 className="mb-4 font-semibold text-foreground">Rate your experience</h3>
+                      <div className="flex gap-2 mb-4">
+                        {[1,2,3,4,5].map(s => (
+                          <button
+                            key={s}
+                            onMouseEnter={() => setHover(s)}
+                            onMouseLeave={() => setHover(0)}
+                            onClick={() => setRating(s)}
+                            className="transition-transform hover:scale-110"
+                          >
+                            <Star className={`h-9 w-9 transition-colors ${
+                              s <= (hover || rating) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'
+                            }`} />
+                          </button>
+                        ))}
+                        {rating > 0 && (
+                          <span className="ml-2 self-center text-sm font-medium text-muted-foreground">
+                            {['','Poor','Fair','Good','Very Good','Excellent'][rating]}
+                          </span>
+                        )}
+                      </div>
+                      <Textarea
+                        placeholder="Write a review (optional)"
+                        value={review}
+                        onChange={e => setReview(e.target.value)}
+                        rows={2}
+                        className="mb-4 resize-none"
+                      />
+                      <Button
+                        className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                        disabled={rating === 0}
+                        onClick={() => { setRated(true); toast.success('Thanks for your rating!'); }}
+                      >
+                        Submit Rating
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
