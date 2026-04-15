@@ -1,6 +1,6 @@
 import { ChangeEvent, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Trash2, Eye, EyeOff, ChefHat, Pencil, MapPin, Loader2, Leaf, Beef, BarChart3, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, Eye, EyeOff, ChefHat, Pencil, MapPin, Loader2, Leaf, Beef, BarChart3, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
 import apiService from '@/services/api';
 import { MenuItem } from '@/data/types';
 import { toast } from 'sonner';
@@ -39,6 +40,39 @@ const OwnerDashboard = () => {
 
   const restaurant = restaurants.find(r => r.id === user?.restaurantId);
   const items = menuItems.filter(m => m.restaurantId === restaurant?.id);
+  const { orders } = useCart();
+  const restaurantOrders = orders.filter(o =>
+    o.restaurantId === restaurant?.id || o.restaurantName === restaurant?.name
+  );
+
+  const exportCSV = () => {
+    if (restaurantOrders.length === 0) {
+      toast.error('No orders to export');
+      return;
+    }
+
+    const rows = [
+      ['Order ID', 'Date', 'Items', 'Payment Method', 'Status', 'Total (₹)'],
+      ...restaurantOrders.map(o => [
+        o.id,
+        new Date(o.createdAt).toLocaleDateString('en-IN'),
+        o.items.map(i => `${i.menuItem.name} x${i.quantity}`).join(' | '),
+        o.paymentMethod.toUpperCase(),
+        o.status.replace(/_/g, ' '),
+        o.total.toFixed(2),
+      ]),
+    ];
+
+    const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${restaurant?.name.replace(/\s+/g, '_')}_sales_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${restaurantOrders.length} orders`);
+  };
 
   const handleAddItem = async () => {
     if (!newItem.name.trim() || !newItem.price || !restaurant) return;
@@ -190,11 +224,16 @@ const OwnerDashboard = () => {
           </div>
           <p className="text-muted-foreground">Restaurant details, images, and menu CRUD</p>
         </div>
-        <Link to="/owner/dashboard">
-          <Button className="gap-2" variant="outline">
-            <BarChart3 className="h-4 w-4" /> Go to Dashboard
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="gap-2" onClick={exportCSV}>
+            <Download className="h-4 w-4" /> Export Sales
           </Button>
-        </Link>
+          <Link to="/owner/dashboard">
+            <Button className="gap-2" variant="outline">
+              <BarChart3 className="h-4 w-4" /> Go to Dashboard
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="mb-8 overflow-hidden rounded-xl border bg-card shadow-sm">
