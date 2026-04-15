@@ -174,3 +174,156 @@ describe('Price formatting', () => {
     expect(total).toBe(574);
   });
 });
+
+// ── Restaurant filtering ─────────────────────────────────────────────────────
+
+describe('Restaurant filtering', () => {
+  const restaurants = [
+    { id: '1', name: 'Spice Garden',  cuisine: ['Indian', 'Spicy'],   isVeg: false, rating: 4.5, priceRange: 2 },
+    { id: '2', name: 'Green Bowl',    cuisine: ['Healthy', 'Salads'], isVeg: true,  rating: 4.7, priceRange: 2 },
+    { id: '3', name: 'Dragon Wok',    cuisine: ['Chinese', 'Spicy'],  isVeg: false, rating: 4.0, priceRange: 1 },
+    { id: '4', name: 'Sweet Tooth',   cuisine: ['Desserts'],          isVeg: true,  rating: 4.8, priceRange: 2 },
+    { id: '5', name: 'Burger Barn',   cuisine: ['Burgers'],           isVeg: false, rating: 4.3, priceRange: 1 },
+  ];
+
+  it('filters veg-only restaurants', () => {
+    const veg = restaurants.filter(r => r.isVeg);
+    expect(veg).toHaveLength(2);
+    expect(veg.map(r => r.name)).toContain('Green Bowl');
+    expect(veg.map(r => r.name)).toContain('Sweet Tooth');
+  });
+
+  it('filters by cuisine type', () => {
+    const spicy = restaurants.filter(r => r.cuisine.includes('Spicy'));
+    expect(spicy).toHaveLength(2);
+  });
+
+  it('filters by search term (case insensitive)', () => {
+    const search = (term: string) =>
+      restaurants.filter(r => r.name.toLowerCase().includes(term.toLowerCase()));
+    expect(search('bowl')).toHaveLength(1);
+    expect(search('BURGER')).toHaveLength(1);
+    expect(search('xyz')).toHaveLength(0);
+  });
+
+  it('sorts by rating descending', () => {
+    const sorted = [...restaurants].sort((a, b) => b.rating - a.rating);
+    expect(sorted[0].name).toBe('Sweet Tooth');   // 4.8
+    expect(sorted[1].name).toBe('Green Bowl');    // 4.7
+    expect(sorted[sorted.length - 1].name).toBe('Dragon Wok'); // 4.0
+  });
+
+  it('filters by price range', () => {
+    const budget = restaurants.filter(r => r.priceRange === 1);
+    expect(budget).toHaveLength(2);
+    expect(budget.map(r => r.name)).toContain('Dragon Wok');
+    expect(budget.map(r => r.name)).toContain('Burger Barn');
+  });
+});
+
+// ── Order ID generation ──────────────────────────────────────────────────────
+
+describe('Order ID format', () => {
+  it('order ID starts with ORD-', () => {
+    const id = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    expect(id.startsWith('ORD-')).toBe(true);
+  });
+
+  it('transaction ID starts with TXN-', () => {
+    const txn = `TXN-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+    expect(txn.startsWith('TXN-')).toBe(true);
+  });
+
+  it('two generated order IDs are unique', () => {
+    const id1 = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    const id2 = `ORD-${(Date.now() + 1).toString(36).toUpperCase()}`;
+    expect(id1).not.toBe(id2);
+  });
+});
+
+// ── Card formatting ──────────────────────────────────────────────────────────
+
+describe('Card number formatting', () => {
+  const formatCardNumber = (v: string) =>
+    v.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
+
+  const formatExpiry = (v: string) => {
+    const digits = v.replace(/\D/g, '').slice(0, 4);
+    if (digits.length >= 3) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    return digits;
+  };
+
+  const getCardType = (num: string) => {
+    const n = num.replace(/\s/g, '');
+    if (/^4/.test(n)) return 'Visa';
+    if (/^5[1-5]/.test(n)) return 'Mastercard';
+    if (/^3[47]/.test(n)) return 'Amex';
+    if (/^6/.test(n)) return 'RuPay';
+    return '';
+  };
+
+  it('formats card number with spaces every 4 digits', () => {
+    expect(formatCardNumber('4532015112830366')).toBe('4532 0151 1283 0366');
+  });
+
+  it('strips non-numeric characters from card number', () => {
+    expect(formatCardNumber('4532-0151-1283-0366')).toBe('4532 0151 1283 0366');
+  });
+
+  it('limits card number to 16 digits', () => {
+    const result = formatCardNumber('12345678901234567890');
+    expect(result.replace(/\s/g, '').length).toBe(16);
+  });
+
+  it('formats expiry as MM/YY', () => {
+    expect(formatExpiry('1225')).toBe('12/25');
+    expect(formatExpiry('0128')).toBe('01/28');
+  });
+
+  it('detects Visa card', () => {
+    expect(getCardType('4532015112830366')).toBe('Visa');
+  });
+
+  it('detects Mastercard', () => {
+    expect(getCardType('5412345678901234')).toBe('Mastercard');
+  });
+
+  it('detects Amex card', () => {
+    expect(getCardType('371449635398431')).toBe('Amex');
+  });
+
+  it('detects RuPay card', () => {
+    expect(getCardType('6521234567890123')).toBe('RuPay');
+  });
+});
+
+// ── Rating system ────────────────────────────────────────────────────────────
+
+describe('Rating system', () => {
+  const ratings = [4, 5, 3, 5, 4];
+
+  it('calculates average rating correctly', () => {
+    const avg = ratings.reduce((s, r) => s + r, 0) / ratings.length;
+    expect(avg).toBe(4.2);
+  });
+
+  it('rounds rating to 1 decimal place', () => {
+    const avg = 4.166666;
+    expect(Math.round(avg * 10) / 10).toBe(4.2);
+  });
+
+  it('rating label maps correctly', () => {
+    const labels: Record<number, string> = { 1: 'Poor', 2: 'Fair', 3: 'Good', 4: 'Very Good', 5: 'Excellent' };
+    expect(labels[1]).toBe('Poor');
+    expect(labels[3]).toBe('Good');
+    expect(labels[5]).toBe('Excellent');
+  });
+
+  it('rating must be between 1 and 5', () => {
+    const isValid = (r: number) => r >= 1 && r <= 5;
+    expect(isValid(1)).toBe(true);
+    expect(isValid(5)).toBe(true);
+    expect(isValid(0)).toBe(false);
+    expect(isValid(6)).toBe(false);
+  });
+});
