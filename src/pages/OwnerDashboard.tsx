@@ -1,6 +1,6 @@
-import { ChangeEvent, useRef, useState } from 'react';
+import { ChangeEvent, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Trash2, Eye, EyeOff, ChefHat, Pencil, MapPin, Loader2, Leaf, Beef, BarChart3, ChevronDown, ChevronUp, Download } from 'lucide-react';
+import { Plus, Trash2, Eye, EyeOff, ChefHat, Pencil, MapPin, Loader2, Leaf, Beef, BarChart3, ChevronDown, ChevronUp, Download, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -45,8 +45,24 @@ const OwnerDashboard = () => {
     o.restaurantId === restaurant?.id || o.restaurantName === restaurant?.name
   );
 
-  const exportCSV = () => {
-    if (restaurantOrders.length === 0) {
+  // Compute best selling items from orders
+  const bestSellers = useMemo(() => {
+    const counts: Record<string, { name: string; qty: number; revenue: number; image: string }> = {};
+    restaurantOrders.forEach(order => {
+      order.items.forEach(i => {
+        const id = i.menuItem.id;
+        // Look up current image from menuItems for accuracy
+        const currentItem = items.find(m => m.id === id);
+        const image = currentItem?.image || i.menuItem.image;
+        if (!counts[id]) counts[id] = { name: i.menuItem.name, qty: 0, revenue: 0, image };
+        counts[id].qty += i.quantity;
+        counts[id].revenue += i.menuItem.price * i.quantity;
+      });
+    });
+    return Object.values(counts).sort((a, b) => b.qty - a.qty).slice(0, 5);
+  }, [restaurantOrders, items]);
+
+  const exportCSV = () => {    if (restaurantOrders.length === 0) {
       toast.error('No orders to export');
       return;
     }
@@ -320,6 +336,41 @@ const OwnerDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Best Sellers */}
+      {bestSellers.length > 0 && (
+        <div className="mb-8 rounded-xl border bg-card p-5 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            <h2 className="font-display text-xl font-bold text-foreground">Best Selling Items</h2>
+          </div>
+          <div className="space-y-3">
+            {bestSellers.map((item, idx) => (
+              <div key={item.name} className="flex items-center gap-4">
+                <span className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                  idx === 0 ? 'bg-yellow-100 text-yellow-700' :
+                  idx === 1 ? 'bg-gray-100 text-gray-600' :
+                  idx === 2 ? 'bg-orange-100 text-orange-600' :
+                  'bg-muted text-muted-foreground'
+                }`}>{idx + 1}</span>
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="h-10 w-10 flex-shrink-0 rounded-lg object-cover"
+                  onError={e => { (e.currentTarget as HTMLImageElement).src = FALLBACK_FOOD_IMAGE; }}
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="truncate text-sm font-semibold text-foreground">{item.name}</p>
+                  <p className="text-xs text-muted-foreground">{item.qty} orders • ₹{item.revenue.toFixed(0)} revenue</p>
+                </div>
+                {idx === 0 && (
+                  <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200">🏆 Top Seller</Badge>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div>
         <div className="mb-4 flex items-center justify-between">
