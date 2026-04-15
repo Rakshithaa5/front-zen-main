@@ -1,37 +1,125 @@
-# Welcome to MoodByte
+# 🍽️ MoodByte
 
-TODO: Document your project here
+> Order food that matches your mood — fast delivery, great taste, zero hassle.
 
-## Docker
 
-Build and run the app with Docker Compose:
+
+---
+
+## 📌 About
+
+**MoodByte** is a full-stack food delivery platform that recommends restaurants and dishes based on how you're feeling. Built with React, Node.js, and Supabase.
+
+---
+
+## ✨ Features
+
+### 👤 Customer
+- Mood-based dish recommendations (Happy, Sad, Tired, Angry, Sick, Celebration)
+- Browse 28+ restaurants with filters
+- Add to cart with live cart preview
+- Checkout with UPI, Card, Net Banking, Wallet, COD
+- Real-time order tracking with live delivery map
+- Order history and customer profile
+
+### 🍴 Restaurant Owner
+- Dedicated owner dashboard (login per restaurant)
+- Add / delete / toggle menu items
+- View restaurant-specific orders and analytics
+- Update order status in real time
+
+### 🛡️ Admin
+- Platform-wide analytics (revenue, orders, restaurants)
+- Add / remove restaurants
+- Approve / verify restaurants
+- Reset owner passwords
+- View all orders across platform
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Tech |
+|-------|------|
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui |
+| Backend | Node.js, Express |
+| Database | Supabase (PostgreSQL) |
+| Auth | JWT |
+| Maps | Leaflet + OpenStreetMap |
+| CI/CD | GitHub Actions + GitHub Pages |
+
+---
+
+## 🏃 Running Locally
+
+### Frontend
+```bash
+npm install
+npm run dev
+```
+
+### Backend
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+Backend runs on `http://localhost:5000`  
+Frontend runs on `http://localhost:8080`
+
+---
+
+## 🔑 Environment Variables
+
+Create `backend/.env`:
+
+```env
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+JWT_SECRET=your_jwt_secret
+PORT=5000
+```
+
+---
+
+## 🐳 Docker
 
 ```bash
 docker compose up --build
 ```
 
-Frontend: http://localhost:8080
+---
 
-Backend: http://localhost:5000
+## 👥 Test Accounts
 
-The backend expects its environment variables in `backend/.env`, including `JWT_SECRET`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY`.
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@moodbyte.com | Admin@123 |
+| Sushi Harbor Owner | owner.sushiharbor@moodbyte.com | Owner@123 |
+| Customer | Register on the app | — |
 
-## Docker Hub
+---
 
-Docker Hub will not show a repository until you push the first image.
+## 📁 Project Structure
 
-If you want to publish the images for the account shown in your screenshot (`rakshithaa5`), use a repository name of your choice and push with these commands:
-
-```bash
-docker login
-
-docker build -t rakshithaa5/front-zen-frontend:latest .
-docker build -t rakshithaa5/front-zen-backend:latest ./backend
-
-docker push rakshithaa5/front-zen-frontend:latest
-docker push rakshithaa5/front-zen-backend:latest
+```
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── context/        # React context (Auth, Cart, App)
+│   ├── pages/          # Route pages
+│   ├── services/       # API service layer
+│   └── data/           # Types and static data
+├── backend/
+│   ├── routes/         # Express API routes
+│   ├── middleware/      # Auth middleware
+│   ├── schema.sql       # Supabase database schema
+│   └── seed.js         # Database seed script
+└── .github/workflows/  # CI/CD pipelines
 ```
 
-If you prefer versioned tags, replace `latest` with something like `v1.0.0`.
+---
 
-After the push, open Docker Hub and refresh the Repositories page. You should see the new repo and its tag list there.
+## 📄 License
+
+MIT
