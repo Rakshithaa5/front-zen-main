@@ -21,13 +21,14 @@ const Navbar = () => {
   const [cartOpen, setCartOpen] = useState(false);
 
   // Auto-open preview when item is added
+  const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   useEffect(() => {
-    if (items.length > 0) {
+    if (itemCount > 0) {
       setCartOpen(true);
       const t = setTimeout(() => setCartOpen(false), 4000);
       return () => clearTimeout(t);
     }
-  }, [items.reduce((s, i) => s + i.quantity, 0)]);
+  }, [itemCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>

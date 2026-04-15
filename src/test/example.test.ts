@@ -109,7 +109,7 @@ describe('Order status progression', () => {
 // ── Payment validation ───────────────────────────────────────────────────────
 
 describe('Payment validation', () => {
-  const validateUpi = (id: string) => /^[\w.\-]{2,256}@[a-zA-Z]{2,64}$/.test(id.trim());
+  const validateUpi = (id: string) => /^[\w.-]{2,256}@[a-zA-Z]{2,64}$/.test(id.trim());
 
   const validateCard = (num: string) => {
     const digits = num.replace(/\s/g, '');
