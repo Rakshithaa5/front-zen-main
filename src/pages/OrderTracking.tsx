@@ -299,8 +299,15 @@ const OrderTracking = () => {
                     <span className="font-semibold text-success">-₹{order.discountAmount.toFixed(2)}</span>
                   </div>
                 )}
-                <Badge className="mt-2 w-full justify-center bg-success/10 text-success hover:bg-success/20">
-                  Payment Successful
+                <Badge className={`mt-2 w-full justify-center hover:bg-success/20 ${
+                  order.paymentMethod === 'cod' && order.status !== 'delivered'
+                    ? 'bg-warning/10 text-warning hover:bg-warning/20'
+                    : 'bg-success/10 text-success'
+                }`}>
+                  {order.paymentMethod === 'cod' && order.status !== 'delivered'
+                    ? '⏳ Payment on Delivery'
+                    : '✓ Payment Successful'
+                  }
                 </Badge>
               </div>
             </div>

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { ArrowRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -20,6 +21,8 @@ const Index = () => {
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
   const [pendingMood, setPendingMood] = useState<Mood | null>(null);
   const [showMoodAuthPrompt, setShowMoodAuthPrompt] = useState(false);
+  const [search, setSearch] = useState('');
+  const resultsRef = useRef<HTMLElement>(null);
   const navigate = useNavigate();
   const { restaurants } = useApp();
   const { user, isAuthenticated } = useAuth();
@@ -32,9 +35,14 @@ const Index = () => {
     return <Navigate to="/admin" replace />;
   }
 
-  const filteredRestaurants = selectedMood
-    ? restaurants.filter(r => r.cuisine.some(c => selectedMood.categories.includes(c)))
-    : restaurants;
+  const filteredRestaurants = restaurants.filter(r => {
+    const matchesMood = selectedMood ? r.cuisine.some(c => selectedMood.categories.includes(c)) : true;
+    const matchesSearch = search.trim()
+      ? r.name.toLowerCase().includes(search.toLowerCase()) ||
+        r.cuisine.some(c => c.toLowerCase().includes(search.toLowerCase()))
+      : true;
+    return matchesMood && matchesSearch;
+  });
 
   const handleMoodSelect = (mood: Mood) => {
     if (!isAuthenticated) {
@@ -62,9 +70,23 @@ const Index = () => {
             Tell us how you&apos;re feeling and we&apos;ll find the perfect meal for you. Fast delivery, great taste, zero hassle.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search restaurants or cuisines..."
+                value={search}
+                onChange={e => {
+                  setSearch(e.target.value);
+                  if (e.target.value.trim()) {
+                    setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                  }
+                }}
+                className="pl-10 h-12 rounded-xl text-base shadow-sm"
+              />
+            </div>
             <Link to="/restaurants">
-              <Button size="lg" className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
-                <Search className="h-4 w-4" /> Browse Restaurants
+              <Button size="lg" className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 h-12">
+                <Search className="h-4 w-4" /> Browse All
               </Button>
             </Link>
           </div>
@@ -97,7 +119,7 @@ const Index = () => {
         <MoodSelector onSelect={handleMoodSelect} selected={selectedMood} />
       </div>
 
-      <section className="container pb-16">
+      <section ref={resultsRef} className="container pb-16">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="font-display text-2xl font-bold text-foreground">
             {selectedMood ? `Recommended for "${selectedMood.label}" mood` : 'Popular Restaurants'}

@@ -1,5 +1,5 @@
 import { ChangeEvent, useMemo, useRef, useState } from 'react';
-import { Trash2, Plus, TrendingUp, ShoppingBag, Store, IndianRupee, Shield, FileCheck2, CheckCircle2, XCircle, Loader2, Pencil, KeyRound, Search, Leaf } from 'lucide-react';
+import { Trash2, Plus, TrendingUp, ShoppingBag, Store, IndianRupee, Shield, FileCheck2, CheckCircle2, XCircle, Loader2, Pencil, KeyRound, Search, Leaf, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -147,6 +147,31 @@ const AdminDashboard = () => {
   };
 
   const parseList = (value: string) => value.split(',').map(v => v.trim()).filter(Boolean);
+
+  const exportOrdersCSV = () => {
+    if (orders.length === 0) { toast.error('No orders to export'); return; }
+    const rows = [
+      ['Order ID', 'Date', 'Restaurant', 'Items', 'Payment', 'Status', 'Total (₹)'],
+      ...orders.map(o => [
+        o.id,
+        new Date(o.createdAt).toLocaleDateString('en-IN'),
+        o.restaurantName,
+        o.items.map(i => `${i.menuItem.name} x${i.quantity}`).join(' | '),
+        o.paymentMethod.toUpperCase(),
+        o.status.replace(/_/g, ' '),
+        o.total.toFixed(2),
+      ]),
+    ];
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `moodbyte_all_orders_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${orders.length} orders`);
+  };
 
   const handleCoverImageFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -355,14 +380,19 @@ const AdminDashboard = () => {
   return (
     <div className="container py-8">
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-            <Shield className="h-6 w-6 text-primary" />
+        <div className="flex items-center justify-between gap-3 mb-2">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+              <Shield className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="font-display text-3xl font-bold text-foreground">Admin Dashboard</h1>
+              <p className="text-sm text-muted-foreground">Welcome back, {user?.name}</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-3xl font-bold text-foreground">Admin Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Welcome back, {user?.name}</p>
-          </div>
+          <Button variant="outline" className="gap-2" onClick={exportOrdersCSV}>
+            <Download className="h-4 w-4" /> Export All Orders
+          </Button>
         </div>
         <p className="text-muted-foreground">Manage restaurants, view orders & analytics</p>
       </div>

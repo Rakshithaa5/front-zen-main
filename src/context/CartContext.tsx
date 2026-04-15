@@ -78,10 +78,20 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('moodbyte_cart');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const { isAuthenticated } = useAuth();
+
+  // Persist cart to localStorage on every change
+  useEffect(() => {
+    localStorage.setItem('moodbyte_cart', JSON.stringify(items));
+  }, [items]);
 
   const mapOrderItems = (items: BackendOrderItem[], restaurantId?: string, restaurantName?: string) => items.map((item) => ({
     menuItem: {
@@ -165,7 +175,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setItems(prev => prev.map(i => i.menuItem.id === itemId ? { ...i, quantity } : i));
   };
 
-  const clearCart = () => setItems([]);
+  const clearCart = () => {
+    setItems([]);
+    localStorage.removeItem('moodbyte_cart');
+  };
 
   const getTotal = () => items.reduce((sum, i) => sum + i.menuItem.price * i.quantity, 0);
   const getItemCount = () => items.reduce((sum, i) => sum + i.quantity, 0);
