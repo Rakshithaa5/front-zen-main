@@ -238,7 +238,7 @@ const OwnerDashboard = () => {
               <p className="text-sm text-muted-foreground">Owner Home - {user?.name}</p>
             </div>
           </div>
-          <p className="text-muted-foreground">Restaurant details, images, and menu CRUD</p>
+          <p className="text-muted-foreground">Restaurant details, images, and menu management</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" className="gap-2" onClick={exportCSV}>
