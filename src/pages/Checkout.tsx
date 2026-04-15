@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CreditCard, Smartphone, Banknote, CheckCircle2, Building2, Wallet, AlertCircle } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { CreditCard, Smartphone, Banknote, CheckCircle2, Building2, Wallet, AlertCircle, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
@@ -96,6 +97,12 @@ const Checkout = () => {
   const { getTotal, placeOrder, items } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const itemNotes: Record<string, string> = location.state?.itemNotes || {};
+
+  const [orderForSomeoneElse, setOrderForSomeoneElse] = useState(false);
+  const [recipientName, setRecipientName] = useState('');
+  const [recipientPhone, setRecipientPhone] = useState('');
 
   const subtotal = getTotal();
   const deliveryFee = 49;
@@ -222,6 +229,51 @@ const Checkout = () => {
                   />
                 </div>
                 {errors.phone && <Err msg={errors.phone} />}
+              </div>
+
+              {/* Ordering for someone else */}
+              <div className="rounded-lg border p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <UserPlus className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Ordering for someone else?</p>
+                      <p className="text-xs text-muted-foreground">Add recipient details</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={orderForSomeoneElse}
+                    onCheckedChange={setOrderForSomeoneElse}
+                  />
+                </div>
+                {orderForSomeoneElse && (
+                  <div className="mt-4 space-y-3">
+                    <div>
+                      <Label htmlFor="recipientName">Recipient Name</Label>
+                      <Input
+                        id="recipientName"
+                        placeholder="Full name"
+                        value={recipientName}
+                        onChange={e => setRecipientName(e.target.value)}
+                        className="mt-1.5"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="recipientPhone">Recipient Phone</Label>
+                      <div className="relative mt-1.5">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">+91</span>
+                        <Input
+                          id="recipientPhone"
+                          type="tel"
+                          placeholder="98765 43210"
+                          value={recipientPhone}
+                          onChange={e => setRecipientPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                          className="pl-12"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Coupons */}
@@ -450,9 +502,14 @@ const Checkout = () => {
 
             <div className="space-y-2 border-b pb-4">
               {items.map(item => (
-                <div key={item.menuItem.id} className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{item.menuItem.name} × {item.quantity}</span>
-                  <span className="font-medium text-foreground">₹{(item.menuItem.price * item.quantity).toFixed(2)}</span>
+                <div key={item.menuItem.id} className="text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{item.menuItem.name} × {item.quantity}</span>
+                    <span className="font-medium text-foreground">₹{(item.menuItem.price * item.quantity).toFixed(2)}</span>
+                  </div>
+                  {itemNotes[item.menuItem.id] && (
+                    <p className="mt-0.5 text-xs text-primary italic">📝 {itemNotes[item.menuItem.id]}</p>
+                  )}
                 </div>
               ))}
             </div>

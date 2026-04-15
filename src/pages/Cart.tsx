@@ -1,6 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
+import { useState } from 'react';
+import { Minus, Plus, Trash2, ShoppingBag, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
 
 const Cart = () => {
@@ -8,6 +10,8 @@ const Cart = () => {
   const navigate = useNavigate();
   const total = getTotal();
   const deliveryFee = total > 0 ? 2.99 : 0;
+  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
+  const [showNoteFor, setShowNoteFor] = useState<string | null>(null);
 
   if (items.length === 0) {
     return (
@@ -28,25 +32,52 @@ const Cart = () => {
 
       <div className="space-y-3">
         {items.map(item => (
-          <div key={item.menuItem.id} className="flex items-center gap-4 rounded-xl border bg-card p-4">
-            <img src={item.menuItem.image} alt={item.menuItem.name} className="h-16 w-16 rounded-lg object-cover" />
-            <div className="flex-1">
-              <h3 className="font-semibold text-foreground">{item.menuItem.name}</h3>
-              <p className="text-xs text-muted-foreground">{item.restaurantName}</p>
-            </div>
-            <div className="flex items-center gap-2 rounded-lg border bg-muted px-1">
-              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => updateQuantity(item.menuItem.id, item.quantity - 1)}>
-                <Minus className="h-3.5 w-3.5" />
+          <div key={item.menuItem.id} className="rounded-xl border bg-card p-4">
+            <div className="flex items-center gap-4">
+              <img src={item.menuItem.image} alt={item.menuItem.name} className="h-16 w-16 rounded-lg object-cover" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground">{item.menuItem.name}</h3>
+                <p className="text-xs text-muted-foreground">{item.restaurantName}</p>
+              </div>
+              <div className="flex items-center gap-2 rounded-lg border bg-muted px-1">
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => updateQuantity(item.menuItem.id, item.quantity - 1)}>
+                  <Minus className="h-3.5 w-3.5" />
+                </Button>
+                <span className="w-5 text-center text-sm font-semibold">{item.quantity}</span>
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => updateQuantity(item.menuItem.id, item.quantity + 1)}>
+                  <Plus className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <span className="w-16 text-right font-semibold text-foreground">₹{(item.menuItem.price * item.quantity).toFixed(2)}</span>
+              <Button size="icon" variant="ghost" onClick={() => removeItem(item.menuItem.id)}>
+                <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
-              <span className="w-5 text-center text-sm font-semibold">{item.quantity}</span>
-              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => updateQuantity(item.menuItem.id, item.quantity + 1)}>
-                <Plus className="h-3.5 w-3.5" />
-              </Button>
             </div>
-            <span className="w-16 text-right font-semibold text-foreground">₹{(item.menuItem.price * item.quantity).toFixed(2)}</span>
-            <Button size="icon" variant="ghost" onClick={() => removeItem(item.menuItem.id)}>
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
+
+            {/* Item note */}
+            <div className="mt-2">
+              {showNoteFor === item.menuItem.id ? (
+                <Input
+                  autoFocus
+                  placeholder="e.g. no onions, extra spicy..."
+                  value={itemNotes[item.menuItem.id] || ''}
+                  onChange={e => setItemNotes(prev => ({ ...prev, [item.menuItem.id]: e.target.value }))}
+                  onBlur={() => setShowNoteFor(null)}
+                  className="h-8 text-xs"
+                />
+              ) : (
+                <button
+                  onClick={() => setShowNoteFor(item.menuItem.id)}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <MessageSquare className="h-3 w-3" />
+                  {itemNotes[item.menuItem.id]
+                    ? <span className="text-primary">{itemNotes[item.menuItem.id]}</span>
+                    : 'Add item instructions'
+                  }
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -60,7 +91,7 @@ const Cart = () => {
             <span className="text-foreground">Total</span><span className="text-foreground">₹{(total + deliveryFee).toFixed(2)}</span>
           </div>
         </div>
-        <Button className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90" size="lg" onClick={() => navigate('/checkout')}>
+        <Button className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90" size="lg" onClick={() => navigate('/checkout', { state: { itemNotes } })}>
           Proceed to Checkout
         </Button>
       </div>
