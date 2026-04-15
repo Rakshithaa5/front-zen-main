@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# Welcome to MoodByte
 
 TODO: Document your project here
 
