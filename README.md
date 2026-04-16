@@ -21,6 +21,7 @@
 - Checkout with UPI, Card, Net Banking, Wallet, COD
 - Real-time order tracking with live delivery map
 - Order history and customer profile
+-customer reviews
 
 ### 🍴 Restaurant Owner
 - Dedicated owner dashboard (login per restaurant)
